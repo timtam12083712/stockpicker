@@ -7,7 +7,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import json
+import time
+import threading
+from datetime import date
+from markupsafe import Markup
 
+import yfinance as yf
 from flask import Flask, render_template, request, redirect, url_for, flash
 from config import Config
 from db.init_db import get_connection, init_db
@@ -17,11 +22,100 @@ from data.corporate_actions import get_upcoming_dividends, get_recent_splits
 app = Flask(__name__)
 app.secret_key = Config.FLASK_SECRET_KEY
 
+# Macro ticker cache (refreshes every 10 minutes)
+_macro_cache = {"data": [], "ts": 0}
+_macro_lock = threading.Lock()
+
+MACRO_TICKERS = [
+    ("^AXJO", "ASX 200"),
+    ("^GSPC", "S&P 500"),
+    ("^IXIC", "Nasdaq"),
+    ("^DJI", "Dow"),
+    ("^VIX", "VIX"),
+    ("CL=F", "Oil (WTI)"),
+    ("GC=F", "Gold"),
+    ("AUDUSD=X", "AUD/USD"),
+]
+
+
+def get_macro_data():
+    """Fetch macro indices/commodities with 10-min cache."""
+    with _macro_lock:
+        if time.time() - _macro_cache["ts"] < 600 and _macro_cache["data"]:
+            return _macro_cache["data"]
+
+    symbols = [t[0] for t in MACRO_TICKERS]
+    labels = {t[0]: t[1] for t in MACRO_TICKERS}
+    results = []
+    try:
+        tickers = yf.Tickers(" ".join(symbols))
+        for sym in symbols:
+            try:
+                t = tickers.tickers[sym]
+                info = t.fast_info
+                price = info.last_price
+                prev = info.previous_close
+                change_pct = ((price - prev) / prev * 100) if prev else 0
+                # Format price based on type
+                if sym == "AUDUSD=X":
+                    price_fmt = f"{price:.4f}"
+                elif sym == "^VIX":
+                    price_fmt = f"{price:.1f}"
+                elif price > 1000:
+                    price_fmt = f"{price:,.0f}"
+                else:
+                    price_fmt = f"{price:.2f}"
+                results.append({
+                    "symbol": sym,
+                    "label": labels[sym],
+                    "price": price_fmt,
+                    "change_pct": round(change_pct, 2),
+                })
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    with _macro_lock:
+        _macro_cache["data"] = results
+        _macro_cache["ts"] = time.time()
+    return results
+
+
+def make_sparkline(prices, width=120, height=32):
+    """Generate an inline SVG sparkline from a list of prices."""
+    if not prices or len(prices) < 2:
+        return ""
+    mn, mx = min(prices), max(prices)
+    rng = mx - mn or 1
+    n = len(prices)
+    points = []
+    for i, p in enumerate(prices):
+        x = round(i / (n - 1) * width, 1)
+        y = round(height - (p - mn) / rng * (height - 2) - 1, 1)
+        points.append(f"{x},{y}")
+    polyline = " ".join(points)
+    color = "#34d399" if prices[-1] >= prices[0] else "#f87171"
+    # Fill area under the line
+    fill_points = f"0,{height} {polyline} {width},{height}"
+    fill_color = color.replace(")", ",0.1)").replace("#", "")
+    svg = (
+        f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
+        f'class="sparkline" xmlns="http://www.w3.org/2000/svg">'
+        f'<polygon points="{fill_points}" fill="{color}" opacity="0.12"/>'
+        f'<polyline points="{polyline}" fill="none" stroke="{color}" '
+        f'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'</svg>'
+    )
+    return Markup(svg)
+
 
 @app.route("/")
 def dashboard():
     """Main dashboard — watchlist overview."""
     conn = get_connection()
+
+    ytd_start = f"{date.today().year}-01-01"
 
     stocks = conn.execute(
         "SELECT * FROM stocks WHERE active=1 ORDER BY sector, ticker"
@@ -35,6 +129,20 @@ def dashboard():
             "SELECT * FROM prices WHERE ticker=? ORDER BY date DESC LIMIT 1",
             (ticker,),
         ).fetchone()
+
+        # YTD prices for sparkline
+        ytd_prices = conn.execute(
+            "SELECT adj_close FROM prices WHERE ticker=? AND date>=? ORDER BY date",
+            (ticker, ytd_start),
+        ).fetchall()
+        sparkline_svg = make_sparkline([r["adj_close"] for r in ytd_prices])
+
+        # YTD change %
+        ytd_change = None
+        if len(ytd_prices) >= 2:
+            first, last = ytd_prices[0]["adj_close"], ytd_prices[-1]["adj_close"]
+            if first:
+                ytd_change = round((last - first) / first * 100, 1)
 
         # Get all recent signals with indicator data
         recent_signals = conn.execute(
@@ -69,6 +177,8 @@ def dashboard():
             "signals": signals_list,
             "indicators": indicators,
             "range_pct": range_pct,
+            "sparkline": sparkline_svg,
+            "ytd_change": ytd_change,
         })
 
     conn.close()
@@ -76,11 +186,14 @@ def dashboard():
     upcoming_divs = get_upcoming_dividends()
     recent_splits = get_recent_splits()
 
+    macro = get_macro_data()
+
     return render_template(
         "dashboard.html",
         stock_data=stock_data,
         upcoming_divs=upcoming_divs,
         recent_splits=recent_splits,
+        macro=macro,
     )
 
 

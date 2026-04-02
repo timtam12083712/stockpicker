@@ -2,6 +2,19 @@
 {% block title %}Watchlist — ASX Stock Picker{% endblock %}
 
 {% block content %}
+
+{% if macro %}
+<div class="macro-ticker">
+    {% for m in macro %}
+    <div class="macro-item">
+        <span class="macro-label">{{ m.label }}</span>
+        <span class="macro-price">{{ m.price }}</span>
+        <span class="macro-change {% if m.change_pct > 0 %}positive{% elif m.change_pct < 0 %}negative{% endif %}">{{ "%+.1f"|format(m.change_pct) }}%</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <h1>Watchlist</h1>
 
 {% if upcoming_divs %}
@@ -19,6 +32,7 @@
             <th>Stock</th>
             <th class="num">Price</th>
             <th class="num">Chg%</th>
+            <th>YTD</th>
             <th class="num">RSI</th>
             <th>52w Range</th>
             <th>Signals</th>
@@ -27,7 +41,14 @@
         </tr>
     </thead>
     <tbody>
+        {% set current_sector = namespace(value='') %}
         {% for item in stock_data %}
+        {% if item.stock.sector != current_sector.value %}
+        {% set current_sector.value = item.stock.sector %}
+        <tr class="sector-header-row">
+            <td colspan="9">{{ item.stock.sector or 'Other' }}</td>
+        </tr>
+        {% endif %}
         {% set ind = item.indicators %}
         {% set bullish_count = item.signals|selectattr('signal_type', 'equalto', 'bullish')|list|length + item.signals|selectattr('signal_type', 'equalto', 'entry')|list|length %}
         {% set bearish_count = item.signals|selectattr('signal_type', 'equalto', 'bearish')|list|length + item.signals|selectattr('signal_type', 'equalto', 'exit')|list|length %}
@@ -45,6 +66,14 @@
                     {{ "%+.1f"|format(ind.daily_change_pct) }}%
                 </span>
                 {% endif %}
+            </td>
+            <td class="sparkline-cell">
+                <div class="sparkline-wrap">
+                    {{ item.sparkline }}
+                    {% if item.ytd_change is not none %}
+                    <span class="ytd-label {% if item.ytd_change >= 0 %}positive{% else %}negative{% endif %}">{{ "%+.1f"|format(item.ytd_change) }}%</span>
+                    {% endif %}
+                </div>
             </td>
             <td class="num">
                 {% if ind.get('rsi') is not none %}

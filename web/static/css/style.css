@@ -51,6 +51,44 @@ main { max-width: 1400px; margin: 1.5rem auto; padding: 0 1.5rem; }
 h1 { margin-bottom: 1rem; font-size: 1.3rem; }
 h2 { margin: 1.5rem 0 0.75rem; color: var(--text-muted); font-size: 1rem; }
 
+/* Macro ticker bar */
+.macro-ticker {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+}
+.macro-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.macro-item:last-child { border-right: none; }
+.macro-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.macro-price {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.macro-change {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 /* Flash messages */
 .flash { background: var(--accent); color: white; padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
 
@@ -80,6 +118,18 @@ h2 { margin: 1.5rem 0 0.75rem; color: var(--text-muted); font-size: 1rem; }
 }
 .watchlist-table tbody tr:hover { background: var(--surface); }
 .watchlist-table tbody td { padding: 0.6rem 0.75rem; vertical-align: middle; }
+
+/* Sector group headers */
+.sector-header-row td {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 0.6rem 0.75rem 0.3rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+}
 
 /* Row tinting for bullish/bearish */
 tr.row-bullish { background: var(--green-bg); }
@@ -128,6 +178,12 @@ tr.row-bearish:hover { background: rgba(248, 113, 113, 0.12); }
     display: block;
     margin-top: 2px;
 }
+
+/* Sparkline */
+.sparkline-cell { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+.sparkline-wrap { display: flex; align-items: center; gap: 0.4rem; }
+.sparkline { display: block; flex-shrink: 0; }
+.ytd-label { font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
 
 /* Signal pills — compact */
 .signal-pill {
