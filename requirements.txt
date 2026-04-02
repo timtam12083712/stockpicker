@@ -1,7 +1,7 @@
 # Data
 yfinance>=0.2.36
-pandas>=2.1.0
-pandas-ta>=0.3.14b
+pandas>=2.1.0,<3.0.0
+ta>=0.11.0
 
 # Portfolio
 snaptrade-python-sdk>=11.0.0
