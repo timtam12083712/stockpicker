@@ -6,6 +6,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import json
+
 from flask import Flask, render_template, request, redirect, url_for, flash
 from config import Config
 from db.init_db import get_connection, init_db
@@ -34,15 +36,39 @@ def dashboard():
             (ticker,),
         ).fetchone()
 
-        latest_signal = conn.execute(
-            "SELECT signal_name, signal_type, created_at FROM signals WHERE ticker=? ORDER BY created_at DESC LIMIT 1",
+        # Get all recent signals with indicator data
+        recent_signals = conn.execute(
+            """SELECT signal_name, signal_type, indicator_values, ai_summary
+               FROM signals WHERE ticker=? ORDER BY created_at DESC LIMIT 5""",
             (ticker,),
-        ).fetchone()
+        ).fetchall()
+
+        # Parse indicators from most recent signal
+        indicators = {}
+        signals_list = []
+        for sig in recent_signals:
+            sig_dict = dict(sig)
+            if sig["indicator_values"]:
+                try:
+                    indicators = json.loads(sig["indicator_values"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            signals_list.append(sig_dict)
+
+        # Calculate 52-week range position (0-100%)
+        range_pct = None
+        if indicators.get("high_52w") and indicators.get("low_52w") and indicators.get("current_price"):
+            high = indicators["high_52w"]
+            low = indicators["low_52w"]
+            if high != low:
+                range_pct = round((indicators["current_price"] - low) / (high - low) * 100, 1)
 
         stock_data.append({
             "stock": dict(s),
             "price": dict(latest_price) if latest_price else None,
-            "signal": dict(latest_signal) if latest_signal else None,
+            "signals": signals_list,
+            "indicators": indicators,
+            "range_pct": range_pct,
         })
 
     conn.close()

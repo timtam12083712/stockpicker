@@ -6,61 +6,95 @@
 
 {% if upcoming_divs %}
 <div class="alert-box">
-    <strong>Upcoming Dividends (next 14 days):</strong>
+    <strong>Upcoming Dividends:</strong>
     {% for d in upcoming_divs %}
     <span class="tag">{{ d.ticker }} ${{ "%.4f"|format(d.value) }} on {{ d.date }}</span>
     {% endfor %}
 </div>
 {% endif %}
 
-{% if recent_splits %}
-<div class="alert-box warning">
-    <strong>Recent Splits (last 30 days):</strong>
-    {% for s in recent_splits %}
-    <span class="tag">{{ s.ticker }} {{ s.raw_ratio }} on {{ s.date }}</span>
-    {% endfor %}
-</div>
-{% endif %}
+<table class="watchlist-table">
+    <thead>
+        <tr>
+            <th>Stock</th>
+            <th class="num">Price</th>
+            <th class="num">Chg%</th>
+            <th class="num">RSI</th>
+            <th>52w Range</th>
+            <th>Signals</th>
+            <th>Verdict</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in stock_data %}
+        {% set ind = item.indicators %}
+        {% set bullish_count = item.signals|selectattr('signal_type', 'equalto', 'bullish')|list|length + item.signals|selectattr('signal_type', 'equalto', 'entry')|list|length %}
+        {% set bearish_count = item.signals|selectattr('signal_type', 'equalto', 'bearish')|list|length + item.signals|selectattr('signal_type', 'equalto', 'exit')|list|length %}
+        <tr class="{% if bullish_count > bearish_count %}row-bullish{% elif bearish_count > bullish_count %}row-bearish{% endif %}">
+            <td>
+                <span class="ticker">{{ item.stock.ticker|replace('.AX', '') }}</span>
+                <span class="company-name">{{ item.stock.name }}</span>
+            </td>
+            <td class="num">
+                {% if item.price %}${{ "%.2f"|format(item.price.adj_close) }}{% endif %}
+            </td>
+            <td class="num">
+                {% if ind.get('daily_change_pct') is not none %}
+                <span class="{% if ind.daily_change_pct > 0 %}positive{% elif ind.daily_change_pct < 0 %}negative{% endif %}">
+                    {{ "%+.1f"|format(ind.daily_change_pct) }}%
+                </span>
+                {% endif %}
+            </td>
+            <td class="num">
+                {% if ind.get('rsi') is not none %}
+                <span class="rsi {% if ind.rsi <= 30 %}rsi-oversold{% elif ind.rsi >= 70 %}rsi-overbought{% endif %}">
+                    {{ "%.0f"|format(ind.rsi) }}
+                </span>
+                {% endif %}
+            </td>
+            <td>
+                {% if item.range_pct is not none %}
+                <div class="range-bar-wrap">
+                    <div class="range-bar">
+                        <div class="range-fill" style="width: {{ item.range_pct }}%"></div>
+                    </div>
+                    <span class="range-label">${{ "%.0f"|format(ind.low_52w) }} — ${{ "%.0f"|format(ind.high_52w) }}</span>
+                </div>
+                {% endif %}
+            </td>
+            <td>
+                {% for sig in item.signals[:3] %}
+                <span class="signal-pill {{ sig.signal_type }}">{{ sig.signal_name }}</span>
+                {% endfor %}
+            </td>
+            <td>
+                {% if bullish_count > bearish_count %}
+                <span class="verdict buy">BUY ZONE</span>
+                {% elif bearish_count > bullish_count %}
+                <span class="verdict sell">EXPENSIVE</span>
+                {% elif item.signals|length > 0 %}
+                <span class="verdict watch">WATCH</span>
+                {% else %}
+                <span class="verdict neutral">—</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="https://www.tradingview.com/chart/?symbol=ASX:{{ item.stock.ticker|replace('.AX', '') }}" target="_blank" class="tv-link" title="TradingView">TV</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-<div class="stock-grid">
-    {% for item in stock_data %}
-    <div class="stock-card">
-        <div class="stock-header">
-            <h3>{{ item.stock.ticker }}</h3>
-            <span class="sector-tag">{{ item.stock.sector }}</span>
-        </div>
-        <div class="stock-name">{{ item.stock.name }}</div>
-
-        {% if item.price %}
-        <div class="stock-price">${{ "%.2f"|format(item.price.adj_close) }}</div>
-        {% endif %}
-
-        {% if item.stock.user_note %}
-        <div class="stock-note">{{ item.stock.user_note }}</div>
-        {% endif %}
-
-        {% if item.signal %}
-        <div class="signal-badge {{ item.signal.signal_type }}">
-            {{ item.signal.signal_name }}
-        </div>
-        {% endif %}
-
-        <div class="stock-actions">
-            <a href="https://www.tradingview.com/chart/?symbol=ASX:{{ item.stock.ticker|replace('.AX', '') }}" target="_blank" class="btn btn-chart">View Chart</a>
-            <form method="POST" action="{{ url_for('watchlist_remove', ticker=item.stock.ticker) }}" style="display:inline">
-                <button type="submit" class="btn btn-remove" onclick="return confirm('Remove {{ item.stock.ticker }}?')">Remove</button>
-            </form>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-<h2>Add Stock</h2>
-<form method="POST" action="{{ url_for('watchlist_add') }}" class="add-stock-form">
-    <input type="text" name="ticker" placeholder="Ticker (e.g. BHP)" required>
-    <input type="text" name="name" placeholder="Company name">
-    <input type="text" name="sector" placeholder="Sector">
-    <input type="text" name="note" placeholder="Note">
-    <button type="submit" class="btn">Add</button>
-</form>
+<details class="add-stock-section">
+    <summary class="btn btn-secondary">+ Add Stock</summary>
+    <form method="POST" action="{{ url_for('watchlist_add') }}" class="add-stock-form">
+        <input type="text" name="ticker" placeholder="Ticker (e.g. BHP)" required>
+        <input type="text" name="name" placeholder="Company name">
+        <input type="text" name="sector" placeholder="Sector">
+        <input type="text" name="note" placeholder="Note">
+        <button type="submit" class="btn">Add</button>
+    </form>
+</details>
 {% endblock %}

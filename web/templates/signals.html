@@ -2,34 +2,30 @@
 {% block title %}Signals — ASX Stock Picker{% endblock %}
 
 {% block content %}
-<h1>Signal History</h1>
-
-<table>
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Ticker</th>
-            <th>Stock</th>
-            <th>Signal</th>
-            <th>Type</th>
-            <th>AI Summary</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for sig in signals %}
-        <tr>
-            <td>{{ sig.date }}</td>
-            <td>{{ sig.ticker }}</td>
-            <td>{{ sig.stock_name }}</td>
-            <td>{{ sig.signal_name }}</td>
-            <td><span class="signal-badge {{ sig.signal_type }}">{{ sig.signal_type }}</span></td>
-            <td class="summary-cell">{{ sig.ai_summary or '—' }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<h1>Signals</h1>
 
 {% if not signals %}
 <p class="empty-state">No signals yet. Run the nightly fetch to generate signals.</p>
+{% else %}
+
+<div class="signal-list">
+    {% for sig in signals %}
+    <div class="signal-row {{ sig.signal_type }}">
+        <div class="signal-header">
+            <span class="signal-ticker">{{ sig.ticker|replace('.AX', '') }}</span>
+            <span class="signal-stock-name">{{ sig.stock_name }}</span>
+            <span class="signal-pill {{ sig.signal_type }}">{{ sig.signal_name }}</span>
+            <span class="signal-date">{{ sig.date }}</span>
+        </div>
+        {% if sig.ai_summary %}
+        <details class="signal-detail">
+            <summary>AI Analysis</summary>
+            <div class="signal-summary">{{ sig.ai_summary }}</div>
+        </details>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
 {% endif %}
 {% endblock %}
