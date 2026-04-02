@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Close Trade — ASX Stock Picker{% endblock %}
+
+{% block content %}
+<h1>Close Trade #{{ trade.id }} — {{ trade.ticker }}</h1>
+
+<div class="trade-summary">
+    <p><strong>Entry:</strong> {{ trade.direction }} {{ trade.quantity }} @ ${{ "%.2f"|format(trade.entry_price) }} on {{ trade.entry_date[:10] }}</p>
+    {% if trade.entry_reasoning %}
+    <p><strong>Entry reasoning:</strong> {{ trade.entry_reasoning }}</p>
+    {% endif %}
+</div>
+
+<form method="POST" class="trade-form">
+    <label>Exit Price ($)
+        <input type="number" name="exit_price" step="0.01" required>
+    </label>
+
+    <label>Brokerage ($)
+        <input type="number" name="brokerage" step="0.01" value="0">
+    </label>
+
+    <label>Exit Reason
+        <textarea name="exit_reason" rows="3" placeholder="Why are you exiting this trade?"></textarea>
+    </label>
+
+    <label>Lessons Learned
+        <textarea name="lessons" rows="4" placeholder="What would you do differently?"></textarea>
+    </label>
+
+    <label>Did the entry signal play out as expected?
+        <select name="signal_accuracy">
+            <option value="">— Select —</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+            <option value="partially">Partially</option>
+        </select>
+    </label>
+
+    <button type="submit" class="btn">Close Trade</button>
+    <a href="{{ url_for('journal') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

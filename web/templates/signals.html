@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Signals — ASX Stock Picker{% endblock %}
+
+{% block content %}
+<h1>Signal History</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Ticker</th>
+            <th>Stock</th>
+            <th>Signal</th>
+            <th>Type</th>
+            <th>AI Summary</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sig in signals %}
+        <tr>
+            <td>{{ sig.date }}</td>
+            <td>{{ sig.ticker }}</td>
+            <td>{{ sig.stock_name }}</td>
+            <td>{{ sig.signal_name }}</td>
+            <td><span class="signal-badge {{ sig.signal_type }}">{{ sig.signal_type }}</span></td>
+            <td class="summary-cell">{{ sig.ai_summary or '—' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not signals %}
+<p class="empty-state">No signals yet. Run the nightly fetch to generate signals.</p>
+{% endif %}
+{% endblock %}

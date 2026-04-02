@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ASX Stock Picker{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">ASX Stock Picker</div>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Watchlist</a>
+            <a href="{{ url_for('signals') }}" {% if request.endpoint == 'signals' %}class="active"{% endif %}>Signals</a>
+            <a href="{{ url_for('journal') }}" {% if request.endpoint in ('journal', 'journal_new') %}class="active"{% endif %}>Journal</a>
+            <a href="{{ url_for('portfolio') }}" {% if request.endpoint == 'portfolio' %}class="active"{% endif %}>Portfolio</a>
+        </div>
+    </nav>
+
+    <main>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for msg in messages %}
+            <div class="flash">{{ msg }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>ASX Stock Picker — Personal Trading Learning Tool — Data as of last market close</p>
+    </footer>
+</body>
+</html>

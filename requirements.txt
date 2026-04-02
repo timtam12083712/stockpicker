@@ -1,0 +1,20 @@
+# Data
+yfinance>=0.2.36
+pandas>=2.1.0
+pandas-ta>=0.3.14b
+
+# Portfolio
+snaptrade-python-sdk>=11.0.0
+
+# AI
+anthropic>=0.39.0
+
+# Alerts
+resend>=2.0.0
+requests>=2.31.0
+
+# Web
+flask>=3.0.0
+
+# Environment
+python-dotenv>=1.0.0

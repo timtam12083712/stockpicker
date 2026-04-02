@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Watchlist — ASX Stock Picker{% endblock %}
+
+{% block content %}
+<h1>Watchlist</h1>
+
+{% if upcoming_divs %}
+<div class="alert-box">
+    <strong>Upcoming Dividends (next 14 days):</strong>
+    {% for d in upcoming_divs %}
+    <span class="tag">{{ d.ticker }} ${{ "%.4f"|format(d.value) }} on {{ d.date }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if recent_splits %}
+<div class="alert-box warning">
+    <strong>Recent Splits (last 30 days):</strong>
+    {% for s in recent_splits %}
+    <span class="tag">{{ s.ticker }} {{ s.raw_ratio }} on {{ s.date }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="stock-grid">
+    {% for item in stock_data %}
+    <div class="stock-card">
+        <div class="stock-header">
+            <h3>{{ item.stock.ticker }}</h3>
+            <span class="sector-tag">{{ item.stock.sector }}</span>
+        </div>
+        <div class="stock-name">{{ item.stock.name }}</div>
+
+        {% if item.price %}
+        <div class="stock-price">${{ "%.2f"|format(item.price.adj_close) }}</div>
+        {% endif %}
+
+        {% if item.stock.user_note %}
+        <div class="stock-note">{{ item.stock.user_note }}</div>
+        {% endif %}
+
+        {% if item.signal %}
+        <div class="signal-badge {{ item.signal.signal_type }}">
+            {{ item.signal.signal_name }}
+        </div>
+        {% endif %}
+
+        <div class="stock-actions">
+            <a href="https://www.tradingview.com/chart/?symbol=ASX:{{ item.stock.ticker|replace('.AX', '') }}" target="_blank" class="btn btn-chart">View Chart</a>
+            <form method="POST" action="{{ url_for('watchlist_remove', ticker=item.stock.ticker) }}" style="display:inline">
+                <button type="submit" class="btn btn-remove" onclick="return confirm('Remove {{ item.stock.ticker }}?')">Remove</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<h2>Add Stock</h2>
+<form method="POST" action="{{ url_for('watchlist_add') }}" class="add-stock-form">
+    <input type="text" name="ticker" placeholder="Ticker (e.g. BHP)" required>
+    <input type="text" name="name" placeholder="Company name">
+    <input type="text" name="sector" placeholder="Sector">
+    <input type="text" name="note" placeholder="Note">
+    <button type="submit" class="btn">Add</button>
+</form>
+{% endblock %}

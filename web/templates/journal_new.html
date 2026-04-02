@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}New Trade — ASX Stock Picker{% endblock %}
+
+{% block content %}
+<h1>Record New Trade</h1>
+
+<form method="POST" class="trade-form">
+    <label>Stock
+        <select name="ticker" required>
+            {% for s in stocks %}
+            <option value="{{ s.ticker }}">{{ s.ticker }} — {{ s.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+
+    <label>Direction
+        <select name="direction" required>
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+        </select>
+    </label>
+
+    <label>Entry Price ($)
+        <input type="number" name="entry_price" step="0.01" required>
+    </label>
+
+    <label>Quantity
+        <input type="number" name="quantity" required>
+    </label>
+
+    <label>Brokerage ($)
+        <input type="number" name="brokerage" step="0.01" value="0">
+    </label>
+
+    <label>Entry Reasoning
+        <textarea name="reasoning" rows="4" maxlength="1000" placeholder="Why are you entering this trade?"></textarea>
+    </label>
+
+    <label>Target Exit Price ($)
+        <input type="number" name="target_exit" step="0.01">
+    </label>
+
+    <label>Stop Loss Price ($)
+        <input type="number" name="stop_loss" step="0.01">
+    </label>
+
+    <button type="submit" class="btn">Record Trade</button>
+    <a href="{{ url_for('journal') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

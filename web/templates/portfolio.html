@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Portfolio — ASX Stock Picker{% endblock %}
+
+{% block content %}
+<h1>Portfolio</h1>
+
+{% if holdings %}
+<table>
+    <thead>
+        <tr>
+            <th>Ticker</th>
+            <th>Quantity</th>
+            <th>Avg Cost</th>
+            <th>Current</th>
+            <th>Value</th>
+            <th>P&L</th>
+            <th>P&L %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in holdings %}
+        <tr class="{{ 'winner' if (h.unrealised_pnl or 0) > 0 else 'loser' if (h.unrealised_pnl or 0) < 0 else '' }}">
+            <td>{{ h.ticker }}</td>
+            <td>{{ h.quantity }}</td>
+            <td>${{ "%.2f"|format(h.avg_cost) }}</td>
+            <td>${{ "%.2f"|format(h.current_price) }}</td>
+            <td>${{ "%.2f"|format(h.current_value) }}</td>
+            <td>${{ "%.2f"|format(h.unrealised_pnl) }}</td>
+            <td>{{ "%.1f"|format(h.unrealised_pnl_pct) }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">No portfolio data yet. Connect SnapTrade to sync your CommSec holdings, or portfolio snapshots will populate after the nightly run.</p>
+{% endif %}
+{% endblock %}
