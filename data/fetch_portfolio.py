@@ -19,14 +19,17 @@ from data.fx_rates import get_fx_rates, convert_to_aud
 # ──────────────────────────────────────────────
 
 def _get_snaptrade_client():
-    """Initialise the SnapTrade client."""
+    """Initialise the SnapTrade client.
+
+    Note: SnapTrade SDK uses consumer_key for the secret and client_id for the ID.
+    """
     if not Config.SNAPTRADE_CLIENT_ID or not Config.SNAPTRADE_CLIENT_SECRET:
         return None
     try:
         from snaptrade_client import SnapTrade
         return SnapTrade(
-            consumer_key=Config.SNAPTRADE_CLIENT_ID,
-            client_id=Config.SNAPTRADE_CLIENT_SECRET,
+            consumer_key=Config.SNAPTRADE_CLIENT_SECRET,
+            client_id=Config.SNAPTRADE_CLIENT_ID,
         )
     except Exception as e:
         print(f"SnapTrade client init failed: {e}")
@@ -47,10 +50,15 @@ def register_snaptrade_user(user_id):
         response = client.authentication.register_snap_trade_user(
             user_id=user_id,
         )
-        print(f"SnapTrade user registered: {response.user_id}")
-        return {"userId": response.user_id, "userSecret": response.user_secret}
+        data = response.body if hasattr(response, 'body') else response
+        user_id_val = data.get("userId") or data.get("user_id") if isinstance(data, dict) else getattr(data, 'user_id', None)
+        user_secret_val = data.get("userSecret") or data.get("user_secret") if isinstance(data, dict) else getattr(data, 'user_secret', None)
+        print(f"SnapTrade user registered: {user_id_val}")
+        return {"userId": user_id_val, "userSecret": user_secret_val}
     except Exception as e:
         print(f"SnapTrade user registration failed: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -80,9 +88,13 @@ def get_snaptrade_login_url(account_id):
             user_id=account["snaptrade_user_id"],
             user_secret=account["snaptrade_user_secret"],
         )
-        return response.redirect_uri
+        data = response.body if hasattr(response, 'body') else response
+        url = data.get("redirectURI") or data.get("redirect_uri") if isinstance(data, dict) else getattr(data, 'redirect_uri', None)
+        return url
     except Exception as e:
         print(f"SnapTrade login URL failed: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -112,55 +124,106 @@ def sync_snaptrade_account(account_id):
     rates = get_fx_rates()
 
     try:
-        # Fetch all accounts for this user
-        accounts = client.account_information.get_user_account_positions(
+        # First, discover the SnapTrade brokerage account ID if we don't have it
+        if not account.get("snaptrade_account_id"):
+            acct_list = client.account_information.list_user_accounts(
+                user_id=account["snaptrade_user_id"],
+                user_secret=account["snaptrade_user_secret"],
+            )
+            # Response is a list of account objects
+            accounts_data = acct_list.body if hasattr(acct_list, 'body') else acct_list
+            if accounts_data:
+                # Use first account if multiple; store the ID
+                first_acct = accounts_data[0]
+                st_acct_id = first_acct.get("id") or getattr(first_acct, 'id', None)
+                if st_acct_id:
+                    conn.execute(
+                        "UPDATE broker_accounts SET snaptrade_account_id=? WHERE id=?",
+                        (str(st_acct_id), account_id),
+                    )
+                    conn.commit()
+                    account["snaptrade_account_id"] = str(st_acct_id)
+                    print(f"  Discovered SnapTrade account ID: {st_acct_id}")
+
+        # Fetch holdings for this specific account
+        response = client.account_information.get_user_holdings(
+            account_id=account["snaptrade_account_id"],
             user_id=account["snaptrade_user_id"],
             user_secret=account["snaptrade_user_secret"],
-            account_id=account["snaptrade_account_id"],
         )
+        holdings_data = response.body if hasattr(response, 'body') else response
 
         # Clear existing holdings for this account
         conn.execute("DELETE FROM holdings WHERE account_id=?", (account_id,))
 
-        for position in accounts:
-            symbol = getattr(position.symbol, 'symbol', None) or str(position.symbol)
-            name = getattr(position.symbol, 'description', None) or symbol
-            qty = position.units or 0
-            price_native = getattr(position, 'price', None) or 0
-            avg_cost = getattr(position, 'average_purchase_price', None)
+        # Extract positions list from response
+        positions = []
+        if isinstance(holdings_data, dict):
+            positions = holdings_data.get("positions", [])
+        elif isinstance(holdings_data, list):
+            positions = holdings_data
+        else:
+            positions = getattr(holdings_data, 'positions', []) or []
 
-            price_aud = convert_to_aud(price_native, currency, rates)
-            value_native = qty * price_native
-            value_aud = qty * price_aud
+        position_count = 0
+        for position in positions:
+                # Extract fields — handle both dict and object access
+                # Parse position — SnapTrade returns deeply nested dicts
+                pos = position if isinstance(position, dict) else dict(position)
 
-            pnl_native = None
-            pnl_aud = None
-            pnl_pct = None
-            if avg_cost and avg_cost > 0 and qty > 0:
-                cost_native = qty * avg_cost
-                pnl_native = value_native - cost_native
-                pnl_aud = convert_to_aud(pnl_native, currency, rates)
-                pnl_pct = round((value_native / cost_native - 1) * 100, 2)
+                # Symbol is nested: position.symbol.symbol.symbol (yes, three levels)
+                sym_outer = pos.get("symbol", {})
+                if isinstance(sym_outer, dict):
+                    sym_inner = sym_outer.get("symbol", {})
+                    if isinstance(sym_inner, dict):
+                        symbol = sym_inner.get("symbol", "") or sym_inner.get("raw_symbol", "")
+                        name = sym_inner.get("description", symbol)
+                    else:
+                        symbol = str(sym_inner)
+                        name = sym_outer.get("description", symbol)
+                else:
+                    symbol = str(sym_outer)
+                    name = symbol
 
-            # Determine geography
-            geo = "AUS" if currency == "AUD" else "GBR" if currency == "GBP" else "USA"
+                qty = pos.get("units") or pos.get("quantity") or 0
+                price_native = pos.get("price") or 0
+                avg_cost = pos.get("average_purchase_price")
 
-            conn.execute(
-                """INSERT INTO holdings
-                   (account_id, symbol, name, asset_class, quantity,
-                    avg_cost_native, current_price_native, current_price_aud,
-                    market_value_native, market_value_aud,
-                    unrealised_pnl_native, unrealised_pnl_aud, unrealised_pnl_pct,
-                    sector, geography)
-                   VALUES (?, ?, ?, 'stock', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (account_id, symbol, name, qty,
-                 avg_cost, price_native, price_aud,
-                 round(value_native, 2), round(value_aud, 2),
-                 round(pnl_native, 2) if pnl_native is not None else None,
-                 round(pnl_aud, 2) if pnl_aud is not None else None,
-                 pnl_pct,
-                 None, geo),
-            )
+                if not symbol or qty == 0:
+                    continue
+
+                price_aud = convert_to_aud(price_native, currency, rates)
+                value_native = qty * price_native
+                value_aud = qty * price_aud
+
+                pnl_native = None
+                pnl_aud = None
+                pnl_pct = None
+                if avg_cost and avg_cost > 0 and qty > 0:
+                    cost_native = qty * avg_cost
+                    pnl_native = value_native - cost_native
+                    pnl_aud = convert_to_aud(pnl_native, currency, rates)
+                    pnl_pct = round((value_native / cost_native - 1) * 100, 2)
+
+                geo = "AUS" if currency == "AUD" else "GBR" if currency == "GBP" else "USA"
+
+                conn.execute(
+                    """INSERT INTO holdings
+                       (account_id, symbol, name, asset_class, quantity,
+                        avg_cost_native, current_price_native, current_price_aud,
+                        market_value_native, market_value_aud,
+                        unrealised_pnl_native, unrealised_pnl_aud, unrealised_pnl_pct,
+                        sector, geography)
+                       VALUES (?, ?, ?, 'stock', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (account_id, symbol, name, qty,
+                     avg_cost, price_native, price_aud,
+                     round(value_native, 2), round(value_aud, 2),
+                     round(pnl_native, 2) if pnl_native is not None else None,
+                     round(pnl_aud, 2) if pnl_aud is not None else None,
+                     pnl_pct,
+                     None, geo),
+                )
+                position_count += 1
 
         # Update last sync time
         conn.execute(
@@ -169,12 +232,14 @@ def sync_snaptrade_account(account_id):
         )
         conn.commit()
         conn.close()
-        print(f"Synced {account['account_label']}: {len(accounts)} positions")
+        print(f"Synced {account['account_label']}: {position_count} positions")
         return True
 
     except Exception as e:
         conn.close()
         print(f"SnapTrade sync failed for {account['account_label']}: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
