@@ -307,8 +307,6 @@ def dashboard():
     """Main dashboard — watchlist overview."""
     conn = get_connection()
 
-    ytd_start = f"{date.today().year}-01-01"
-
     stocks = conn.execute(
         "SELECT * FROM stocks WHERE active=1 ORDER BY sector, ticker"
     ).fetchall()
@@ -322,24 +320,27 @@ def dashboard():
             (ticker,),
         ).fetchone()
 
-        # YTD prices for sparkline
-        ytd_prices = conn.execute(
-            "SELECT adj_close FROM prices WHERE ticker=? AND date>=? ORDER BY date",
-            (ticker, ytd_start),
+        # All-time prices for sparkline
+        all_prices = conn.execute(
+            "SELECT adj_close FROM prices WHERE ticker=? ORDER BY date",
+            (ticker,),
         ).fetchall()
-        sparkline_svg = make_sparkline([r["adj_close"] for r in ytd_prices])
+        sparkline_svg = make_sparkline([r["adj_close"] for r in all_prices])
 
-        # YTD change %
-        ytd_change = None
-        if len(ytd_prices) >= 2:
-            first, last = ytd_prices[0]["adj_close"], ytd_prices[-1]["adj_close"]
+        # All-time change %
+        alltime_change = None
+        if len(all_prices) >= 2:
+            first, last = all_prices[0]["adj_close"], all_prices[-1]["adj_close"]
             if first:
-                ytd_change = round((last - first) / first * 100, 1)
+                alltime_change = round((last - first) / first * 100, 1)
 
-        # Get all recent signals with indicator data
+        # Get recent signals, deduplicated by signal_name (keep latest)
         recent_signals = conn.execute(
             """SELECT signal_name, signal_type, indicator_values, ai_summary
-               FROM signals WHERE ticker=? ORDER BY created_at DESC LIMIT 5""",
+               FROM signals WHERE ticker=?
+               GROUP BY signal_name
+               HAVING created_at = MAX(created_at)
+               ORDER BY created_at DESC LIMIT 5""",
             (ticker,),
         ).fetchall()
 
@@ -370,7 +371,7 @@ def dashboard():
             "indicators": indicators,
             "range_pct": range_pct,
             "sparkline": sparkline_svg,
-            "ytd_change": ytd_change,
+            "alltime_change": alltime_change,
         })
 
     conn.close()
@@ -495,6 +496,12 @@ def reference():
     """Reference hub — learning sections."""
     cycle = get_economic_cycle()
     return render_template("reference.html", cycle=cycle)
+
+
+@app.route("/ref/indicators")
+def ref_indicators():
+    """Technical indicators and signals learning page."""
+    return render_template("indicators.html")
 
 
 @app.route("/ref/cycle")

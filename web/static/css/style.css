@@ -544,6 +544,74 @@ table:not(.watchlist-table) th { color: var(--text-muted); font-weight: 600; fon
 tr.winner td:nth-child(5), tr.winner td:nth-child(6) { color: var(--green); }
 tr.loser td:nth-child(5), tr.loser td:nth-child(6) { color: var(--red); }
 
+/* ===== Indicators Reference Page ===== */
+.ref-toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.ref-toc h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.4rem; }
+.ref-toc-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.ref-toc-links a { font-size: 0.82rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+.ref-toc-links a:hover { text-decoration: underline; }
+
+.indicator-section { margin-bottom: 2rem; scroll-margin-top: 2rem; }
+.indicator-section h2 { margin-top: 0; }
+
+.indicator-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+}
+.indicator-card h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.4rem; }
+.indicator-what p, .indicator-how p, .indicator-card p { font-size: 0.83rem; line-height: 1.6; color: var(--text); margin-bottom: 0.4rem; }
+.indicator-signals { margin-top: 0.5rem; }
+.indicator-signals h4 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.3rem; }
+
+.indicator-rules { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.4rem 0; }
+.indicator-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+.indicator-rule.bullish { background: rgba(52, 211, 153, 0.06); }
+.indicator-rule.neutral { background: rgba(251, 191, 36, 0.06); }
+.indicator-rule.bearish { background: rgba(248, 113, 113, 0.06); }
+.rule-label {
+    font-weight: 700;
+    font-size: 0.75rem;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+.indicator-rule.bullish .rule-label { color: var(--green); }
+.indicator-rule.neutral .rule-label { color: var(--yellow); }
+.indicator-rule.bearish .rule-label { color: var(--red); }
+.rule-text { color: var(--text-muted); }
+
+.indicator-deep-dive {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+}
+.indicator-deep-dive h4 { font-size: 0.85rem; font-weight: 700; margin: 0.75rem 0 0.3rem; }
+.indicator-deep-dive h4:first-child { margin-top: 0; }
+.indicator-deep-dive p { font-size: 0.83rem; line-height: 1.6; color: var(--text); margin-bottom: 0.4rem; }
+.indicator-deep-dive ul { font-size: 0.82rem; line-height: 1.7; padding-left: 1.2rem; color: var(--text); margin-bottom: 0.5rem; }
+.indicator-deep-dive li { margin-bottom: 0.2rem; }
+
+.fund-metrics { display: flex; flex-direction: column; gap: 0.75rem; }
+.fund-metric h5 { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.2rem; }
+.fund-metric p { font-size: 0.82rem; line-height: 1.55; color: var(--text-muted); margin-bottom: 0.3rem; }
+
 /* Stats bar */
 .stats-bar { display: flex; gap: 2rem; padding: 0.75rem 1rem; background: var(--surface); border-radius: 6px; margin-bottom: 1rem; }
 .stat { font-size: 0.85rem; color: var(--text-muted); }

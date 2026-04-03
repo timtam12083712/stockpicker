@@ -50,7 +50,7 @@
             <th>Stock</th>
             <th class="num">Price</th>
             <th class="num">Chg%</th>
-            <th>YTD</th>
+            <th>All-time</th>
             <th class="num">RSI</th>
             <th>52w Range</th>
             <th>Signals</th>
@@ -88,8 +88,8 @@
             <td class="sparkline-cell">
                 <div class="sparkline-wrap">
                     {{ item.sparkline }}
-                    {% if item.ytd_change is not none %}
-                    <span class="ytd-label {% if item.ytd_change >= 0 %}positive{% else %}negative{% endif %}">{{ "%+.1f"|format(item.ytd_change) }}%</span>
+                    {% if item.alltime_change is not none %}
+                    <span class="ytd-label {% if item.alltime_change >= 0 %}positive{% else %}negative{% endif %}">{{ "%+.1f"|format(item.alltime_change) }}%</span>
                     {% endif %}
                 </div>
             </td>

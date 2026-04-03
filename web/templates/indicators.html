@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+{% block title %}Signals & Indicators — ASX Stock Picker{% endblock %}
+
+{% block content %}
+
+<div class="cycle-page">
+
+    <div class="cycle-page-header">
+        <a href="{{ url_for('reference') }}" class="ref-back">&larr; Back to Reference</a>
+        <h1>Signals & Indicators</h1>
+        <p class="cycle-subtitle">How your watchlist signals and signal cards are generated. This page covers every indicator and signal used in the dashboard, what they mean, and when they're useful (or not).</p>
+    </div>
+
+    {# ===== TABLE OF CONTENTS ===== #}
+    <div class="ref-toc">
+        <h4>On this page</h4>
+        <div class="ref-toc-links">
+            <a href="#moving-averages">Moving Averages</a>
+            <a href="#rsi">RSI</a>
+            <a href="#macd">MACD</a>
+            <a href="#bollinger">Bollinger Bands</a>
+            <a href="#volume">Volume</a>
+            <a href="#52w-range">52-Week Range</a>
+            <a href="#fundamental-signals">Fundamental Signals</a>
+            <a href="#signal-cards">How Signal Cards Work</a>
+        </div>
+    </div>
+
+    {# ===== MOVING AVERAGES ===== #}
+    <div id="moving-averages" class="indicator-section">
+        <h2>Moving Averages (SMA)</h2>
+        <div class="indicator-card">
+            <div class="indicator-what">
+                <h4>What it is</h4>
+                <p>A <strong>Simple Moving Average (SMA)</strong> is the average closing price over a set number of days. The two most common are the <strong>50-day SMA</strong> (short-term trend) and the <strong>200-day SMA</strong> (long-term trend).</p>
+                <p>Think of it as a "smoothed" version of the price — it filters out daily noise and shows you the underlying direction.</p>
+            </div>
+            <div class="indicator-how">
+                <h4>How to read it</h4>
+                <div class="indicator-rules">
+                    <div class="indicator-rule bullish">
+                        <span class="rule-label">Bullish</span>
+                        <span class="rule-text">Price above 50-day SMA — short-term uptrend</span>
+                    </div>
+                    <div class="indicator-rule bullish">
+                        <span class="rule-label">Bullish</span>
+                        <span class="rule-text">Price above 200-day SMA — long-term uptrend</span>
+                    </div>
+                    <div class="indicator-rule bearish">
+                        <span class="rule-label">Bearish</span>
+                        <span class="rule-text">Price below 50-day SMA — short-term downtrend</span>
+                    </div>
+                    <div class="indicator-rule bearish">
+                        <span class="rule-label">Bearish</span>
+                        <span class="rule-text">Price below 200-day SMA — long-term downtrend</span>
+                    </div>
+                </div>
+            </div>
+            <div class="indicator-signals">
+                <h4>Dashboard signals generated</h4>
+                <div class="signal-tags">
+                    <span class="signal-tag signal-tag-bullish">Price above 50MA</span>
+                    <span class="signal-tag signal-tag-bearish">Price below 50MA</span>
+                    <span class="signal-tag signal-tag-bullish">Golden Cross</span>
+                    <span class="signal-tag signal-tag-bearish">Death Cross</span>
+                    <span class="signal-tag signal-tag-bullish">Above 200DMA</span>
+                    <span class="signal-tag signal-tag-bearish">Below 200DMA</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-deep-dive">
+            <h4>Golden Cross & Death Cross</h4>
+            <p>These are <strong>crossover signals</strong> — when one moving average crosses another:</p>
+            <ul>
+                <li><strong>Golden Cross:</strong> The 50-day SMA crosses <em>above</em> the 200-day SMA. This is a classic bullish signal suggesting the trend has shifted from bearish to bullish. Historically, stocks tend to rally after a golden cross — but it's a <strong>lagging indicator</strong> (the move has often already started).</li>
+                <li><strong>Death Cross:</strong> The 50-day SMA crosses <em>below</em> the 200-day SMA. The opposite — suggests a shift to a bearish trend. Can signal the start of a prolonged decline, but also produces false signals in sideways markets.</li>
+            </ul>
+
+            <h4>The 200-day SMA in particular</h4>
+            <p>The 200-day SMA is the single most widely watched moving average by institutional investors. Many fund managers use it as a "line in the sand":</p>
+            <ul>
+                <li>Stocks trading <strong>above</strong> their 200-day SMA are considered to be in an uptrend — institutions are more willing to buy</li>
+                <li>Stocks trading <strong>below</strong> are in a downtrend — institutions become cautious, selling pressure increases</li>
+                <li>The 200-day SMA often acts as <strong>support</strong> (price bounces off it in an uptrend) or <strong>resistance</strong> (price fails to break above it in a downtrend)</li>
+            </ul>
+            <p>On the signal cards, the <strong>Momentum</strong> section shows whether each stock is above or below its 200-day SMA and by how much.</p>
+
+            <h4>Limitations</h4>
+            <ul>
+                <li>Moving averages are <strong>lagging</strong> — they tell you where the trend has been, not where it's going</li>
+                <li>In <strong>sideways/choppy markets</strong>, the price whipsaws back and forth across the SMA, generating false signals</li>
+                <li>They work best in <strong>trending markets</strong> — strong uptrends or downtrends</li>
+                <li>A golden cross doesn't mean "buy now" — the best entry might have been weeks earlier when the price bottomed</li>
+            </ul>
+        </div>
+    </div>
+
+    {# ===== RSI ===== #}
+    <div id="rsi" class="indicator-section">
+        <h2>RSI (Relative Strength Index)</h2>
+        <div class="indicator-card">
+            <div class="indicator-what">
+                <h4>What it is</h4>
+                <p>RSI measures <strong>momentum</strong> — how fast and how much the price has been rising or falling over the last 14 days. It produces a number from 0 to 100.</p>
+                <p>It answers: "Has this stock been going up too fast (overbought) or down too fast (oversold)?"</p>
+            </div>
+            <div class="indicator-how">
+                <h4>How to read it</h4>
+                <div class="indicator-rules">
+                    <div class="indicator-rule bullish">
+                        <span class="rule-label">RSI &lt; 30</span>
+                        <span class="rule-text">Oversold — price has fallen hard, may be due for a bounce</span>
+                    </div>
+                    <div class="indicator-rule neutral">
+                        <span class="rule-label">RSI 30-70</span>
+                        <span class="rule-text">Normal range — no extreme signal</span>
+                    </div>
+                    <div class="indicator-rule bearish">
+                        <span class="rule-label">RSI &gt; 70</span>
+                        <span class="rule-text">Overbought — price has risen fast, may be due for a pullback</span>
+                    </div>
+                </div>
+            </div>
+            <div class="indicator-signals">
+                <h4>Dashboard signals generated</h4>
+                <div class="signal-tags">
+                    <span class="signal-tag signal-tag-bullish">RSI Oversold</span>
+                    <span class="signal-tag signal-tag-bearish">RSI Overbought</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-deep-dive">
+            <h4>Important nuances</h4>
+            <ul>
+                <li><strong>RSI oversold ≠ "buy now":</strong> A stock can stay oversold for weeks in a strong downtrend. Oversold means the selling has been aggressive, not that it's finished. It's a <em>watch</em> signal, not an <em>action</em> signal.</li>
+                <li><strong>Strong stocks stay overbought:</strong> In a bull market, quality stocks can have RSI above 70 for months. Selling just because RSI is high can mean selling your winners too early.</li>
+                <li><strong>Ex-dividend distortion:</strong> When a stock goes ex-dividend, the price drops by the dividend amount. This can push RSI down artificially. The dashboard <strong>suppresses RSI signals within 3 days of an ex-dividend date</strong> to avoid false alerts.</li>
+                <li><strong>Best used with context:</strong> RSI oversold on a high-quality stock in an uptrend = potential buying opportunity. RSI oversold on a deteriorating business = could keep falling.</li>
+            </ul>
+            <p>On the watchlist, the RSI column is colour-coded: <span style="color: var(--green)">green</span> for oversold (&le; 30), <span style="color: var(--red)">red</span> for overbought (&ge; 70).</p>
+        </div>
+    </div>
+
+    {# ===== MACD ===== #}
+    <div id="macd" class="indicator-section">
+        <h2>MACD (Moving Average Convergence Divergence)</h2>
+        <div class="indicator-card">
+            <div class="indicator-what">
+                <h4>What it is</h4>
+                <p>MACD measures the relationship between two moving averages (12-day and 26-day EMA). It shows whether the short-term trend is strengthening or weakening relative to the longer-term trend.</p>
+                <p>The MACD line is compared to a "signal line" (9-day EMA of the MACD). When they cross, it generates a signal.</p>
+            </div>
+            <div class="indicator-how">
+                <h4>How to read it</h4>
+                <div class="indicator-rules">
+                    <div class="indicator-rule bullish">
+                        <span class="rule-label">Crossover</span>
+                        <span class="rule-text">MACD crosses above signal line — momentum shifting bullish</span>
+                    </div>
+                    <div class="indicator-rule bearish">
+                        <span class="rule-label">Crossunder</span>
+                        <span class="rule-text">MACD crosses below signal line — momentum shifting bearish</span>
+                    </div>
+                </div>
+            </div>
+            <div class="indicator-signals">
+                <h4>Dashboard signals generated</h4>
+                <div class="signal-tags">
+                    <span class="signal-tag signal-tag-bullish">MACD Crossover</span>
+                    <span class="signal-tag signal-tag-bearish">MACD Crossunder</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-deep-dive">
+            <h4>How to think about MACD</h4>
+            <ul>
+                <li>MACD is a <strong>trend-following momentum indicator</strong> — it works best in trending markets, not sideways ones</li>
+                <li>A bullish crossover after a prolonged decline is more significant than one during choppy sideways action</li>
+                <li><strong>Divergence</strong> is a powerful (advanced) signal: if the stock makes a new low but MACD makes a higher low, it suggests selling pressure is weakening — potential reversal coming</li>
+                <li>MACD is <strong>lagging</strong> like all moving average-based indicators — it confirms trends rather than predicting them</li>
+            </ul>
+            <p><strong>Settings used:</strong> 12-day fast EMA, 26-day slow EMA, 9-day signal line (standard defaults).</p>
+        </div>
+    </div>
+
+    {# ===== BOLLINGER BANDS ===== #}
+    <div id="bollinger" class="indicator-section">
+        <h2>Bollinger Bands</h2>
+        <div class="indicator-card">
+            <div class="indicator-what">
+                <h4>What it is</h4>
+                <p>Bollinger Bands are a volatility envelope around the 20-day SMA. The upper band is 2 standard deviations above, the lower band is 2 below. As volatility increases, the bands widen; as it decreases, they contract.</p>
+                <p>About 95% of price action falls within the bands under normal conditions.</p>
+            </div>
+            <div class="indicator-how">
+                <h4>How to read it</h4>
+                <div class="indicator-rules">
+                    <div class="indicator-rule bullish">
+                        <span class="rule-label">Touch lower band</span>
+                        <span class="rule-text">Price at lower extreme — potentially oversold (in an uptrend)</span>
+                    </div>
+                    <div class="indicator-rule bearish">
+                        <span class="rule-label">Touch upper band</span>
+                        <span class="rule-text">Price at upper extreme — potentially overbought</span>
+                    </div>
+                    <div class="indicator-rule neutral">
+                        <span class="rule-label">Squeeze</span>
+                        <span class="rule-text">Bands very narrow — low volatility, often precedes a big move (direction unknown)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-deep-dive">
+            <h4>Key concept: Bollinger Band Squeeze</h4>
+            <p>When the bands contract tightly, it means the stock has been trading in a very narrow range. This low-volatility period often <strong>precedes a breakout</strong> — the stock will eventually make a big move. The bands don't tell you <em>which direction</em>, just that a move is coming. Combine with other indicators (RSI, MACD, fundamentals) to gauge direction.</p>
+            <p><strong>Settings used:</strong> 20-day SMA, 2 standard deviations.</p>
+        </div>
+    </div>
+
+    {# ===== VOLUME ===== #}
+    <div id="volume" class="indicator-section">
+        <h2>Volume</h2>
+        <div class="indicator-card">
+            <div class="indicator-what">
+                <h4>What it is</h4>
+                <p>Volume is the number of shares traded in a day. The dashboard tracks the <strong>volume ratio</strong> — today's volume compared to the 20-day average.</p>
+                <p>Volume confirms price moves. A big price move on high volume is more meaningful than one on low volume.</p>
+            </div>
+            <div class="indicator-how">
+                <h4>How to read it</h4>
+                <div class="indicator-rules">
+                    <div class="indicator-rule neutral">
+                        <span class="rule-label">Spike &gt; 2x</span>
+                        <span class="rule-text">Volume spike — something is happening, investigate (earnings, news, institutional buying/selling)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="indicator-signals">
+                <h4>Dashboard signals generated</h4>
+                <div class="signal-tags">
+                    <span class="signal-tag signal-tag-neutral">Volume Spike</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-deep-dive">
+            <h4>Why volume matters</h4>
+            <ul>
+                <li><strong>Price up + high volume</strong> = strong conviction buying — bullish</li>
+                <li><strong>Price down + high volume</strong> = strong conviction selling — bearish</li>
+                <li><strong>Price up + low volume</strong> = weak rally, potentially unsustainable</li>
+                <li><strong>Price down + low volume</strong> = lack of sellers, may not be meaningful</li>
+            </ul>
+            <p>Volume spikes often occur around earnings announcements, index rebalances, or significant news. The dashboard flags spikes above 2x the 20-day average as an "attention" signal so you can investigate.</p>
+        </div>
+    </div>
+
+    {# ===== 52-WEEK RANGE ===== #}
+    <div id="52w-range" class="indicator-section">
+        <h2>52-Week Range</h2>
+        <div class="indicator-card">
+            <div class="indicator-what">
+                <h4>What it is</h4>
+                <p>The 52-week high and low represent the highest and lowest prices the stock has traded at in the past year. The dashboard shows where the current price sits as a percentage of this range.</p>
+            </div>
+            <div class="indicator-how">
+                <h4>How to read it</h4>
+                <div class="indicator-rules">
+                    <div class="indicator-rule bullish">
+                        <span class="rule-label">Within 5% of low</span>
+                        <span class="rule-text">Near 52-week low — potential entry point if fundamentals are sound</span>
+                    </div>
+                    <div class="indicator-rule bearish">
+                        <span class="rule-label">Within 3% of high</span>
+                        <span class="rule-text">Near 52-week high — may be extended, consider if there's still upside</span>
+                    </div>
+                </div>
+            </div>
+            <div class="indicator-signals">
+                <h4>Dashboard signals generated</h4>
+                <div class="signal-tags">
+                    <span class="signal-tag signal-tag-bullish">Near 52-week Low</span>
+                    <span class="signal-tag signal-tag-bearish">Near 52-week High</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-deep-dive">
+            <h4>Context matters</h4>
+            <ul>
+                <li><strong>Near 52-week low on a quality company</strong> with solid fundamentals = potential opportunity. The market may be overreacting to short-term news.</li>
+                <li><strong>Near 52-week low on a deteriorating business</strong> = could be a value trap. "Cheap" doesn't mean "good value" if earnings are declining.</li>
+                <li><strong>Near 52-week high</strong> doesn't automatically mean "sell" — many great stocks spend most of their time near all-time highs because they keep growing.</li>
+            </ul>
+            <p>The range bar on the watchlist gives you a quick visual of where the stock sits within its 52-week range.</p>
+        </div>
+    </div>
+
+    {# ===== FUNDAMENTAL SIGNALS ===== #}
+    <div id="fundamental-signals" class="indicator-section">
+        <h2>Fundamental Signals</h2>
+        <p class="section-intro">The Signal Cards page evaluates each watchlist stock across four fundamental categories. Here's what each metric means and why it matters.</p>
+
+        <div class="indicator-card">
+            <h4>A) Quality</h4>
+            <div class="fund-metrics">
+                <div class="fund-metric">
+                    <h5>ROE (Return on Equity)</h5>
+                    <p>How much profit a company generates for each dollar of shareholder equity. <strong>Higher = better.</strong></p>
+                    <div class="indicator-rules">
+                        <div class="indicator-rule bullish"><span class="rule-label">&ge; 15%</span><span class="rule-text">High ROE — excellent capital allocation</span></div>
+                        <div class="indicator-rule neutral"><span class="rule-label">8-15%</span><span class="rule-text">Moderate — acceptable for most sectors</span></div>
+                        <div class="indicator-rule bearish"><span class="rule-label">&lt; 8%</span><span class="rule-text">Low — the business isn't generating strong returns</span></div>
+                    </div>
+                </div>
+                <div class="fund-metric">
+                    <h5>Profit Margins</h5>
+                    <p>Net income as a percentage of revenue. Wide margins mean pricing power and efficiency.</p>
+                    <div class="indicator-rules">
+                        <div class="indicator-rule bullish"><span class="rule-label">&ge; 20%</span><span class="rule-text">Strong — indicates competitive moat or premium product</span></div>
+                        <div class="indicator-rule neutral"><span class="rule-label">10-20%</span><span class="rule-text">Healthy — adequate for most industries</span></div>
+                        <div class="indicator-rule bearish"><span class="rule-label">&lt; 10%</span><span class="rule-text">Thin — vulnerable to cost pressures</span></div>
+                    </div>
+                </div>
+                <div class="fund-metric">
+                    <h5>Debt to Equity</h5>
+                    <p>Total debt divided by shareholder equity. Measures financial leverage and balance sheet risk.</p>
+                    <div class="indicator-rules">
+                        <div class="indicator-rule bullish"><span class="rule-label">&lt; 50%</span><span class="rule-text">Strong balance sheet — conservative financing</span></div>
+                        <div class="indicator-rule neutral"><span class="rule-label">50-100%</span><span class="rule-text">Moderate debt — manageable for most businesses</span></div>
+                        <div class="indicator-rule bearish"><span class="rule-label">&gt; 150%</span><span class="rule-text">High leverage — risk flag, especially in rising rate environments</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-card">
+            <h4>B) Growth</h4>
+            <div class="fund-metrics">
+                <div class="fund-metric">
+                    <h5>Revenue Growth</h5>
+                    <p>Year-over-year change in total revenue. Shows whether the business is expanding.</p>
+                </div>
+                <div class="fund-metric">
+                    <h5>Earnings Growth (EPS)</h5>
+                    <p>Year-over-year change in earnings per share. More important than revenue growth because it shows profitability is growing, not just sales.</p>
+                </div>
+                <div class="fund-metric">
+                    <h5>Earnings Revisions</h5>
+                    <p>Whether analyst estimates are being revised up (upgrades) or down (downgrades). Detected by comparing forward PE to trailing PE. <strong>This is one of the most powerful signals</strong> — stocks with earnings upgrades tend to outperform over 3-12 months.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-card">
+            <h4>C) Valuation</h4>
+            <div class="fund-metrics">
+                <div class="fund-metric">
+                    <h5>PE Ratio (Price to Earnings)</h5>
+                    <p>Share price divided by earnings per share. How much you're paying for each dollar of earnings. <strong>Lower ≠ always better</strong> — fast-growing companies deserve higher PEs.</p>
+                    <div class="indicator-rules">
+                        <div class="indicator-rule bullish"><span class="rule-label">&lt; 12x</span><span class="rule-text">Low PE — may be undervalued (or earnings are about to decline)</span></div>
+                        <div class="indicator-rule neutral"><span class="rule-label">12-25x</span><span class="rule-text">Fair range for most ASX companies</span></div>
+                        <div class="indicator-rule bearish"><span class="rule-label">&gt; 35x</span><span class="rule-text">Expensive — needs strong growth to justify</span></div>
+                    </div>
+                </div>
+                <div class="fund-metric">
+                    <h5>Free Cash Flow (FCF) Yield</h5>
+                    <p>Free cash flow divided by market cap. Tells you how much actual cash the business generates relative to its price. <strong>This is arguably more important than PE</strong> because earnings can be manipulated but cash is real.</p>
+                </div>
+                <div class="fund-metric">
+                    <h5>Dividend Yield</h5>
+                    <p>Annual dividends per share divided by the share price. For medium-to-long term investors, dividends compound significantly. ASX stocks with franking credits are even more tax-effective.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="indicator-card">
+            <h4>D) Momentum</h4>
+            <div class="fund-metrics">
+                <div class="fund-metric">
+                    <h5>Relative Strength vs ASX200</h5>
+                    <p>3-month return of the stock minus the 3-month return of the ASX200. Positive = outperforming the index. Stocks with strong relative strength tend to <strong>continue outperforming</strong> (momentum factor).</p>
+                </div>
+                <div class="fund-metric">
+                    <h5>3M and 6M Returns</h5>
+                    <p>Recent price performance. Combined with fundamental signals, helps you judge whether the market agrees with the fundamentals (or disagrees — which could be an opportunity).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== HOW SIGNAL CARDS WORK ===== #}
+    <div id="signal-cards" class="indicator-section">
+        <h2>How Signal Cards Work</h2>
+        <p class="section-intro">The Signals page generates a card for each watchlist stock by evaluating all the metrics above and scoring them.</p>
+
+        <div class="indicator-card">
+            <h4>Scoring</h4>
+            <p>Each signal tag is classified as bullish (+1), neutral (0), or bearish (-1). Risk flags subtract an additional -0.5 each. The composite score determines the overall rating:</p>
+            <div class="indicator-rules" style="margin-top: 0.5rem">
+                <div class="indicator-rule bullish"><span class="rule-label">Score &ge; 3</span><span class="rule-text">Bullish rating</span></div>
+                <div class="indicator-rule neutral"><span class="rule-label">Score -1 to +2</span><span class="rule-text">Neutral rating</span></div>
+                <div class="indicator-rule bearish"><span class="rule-label">Score &le; -2</span><span class="rule-text">Bearish rating</span></div>
+            </div>
+        </div>
+
+        <div class="indicator-card">
+            <h4>Action Labels</h4>
+            <div class="indicator-rules">
+                <div class="indicator-rule bullish"><span class="rule-label">BUY CANDIDATE</span><span class="rule-text">Bullish rating + 0-1 risk flags + not extremely overvalued</span></div>
+                <div class="indicator-rule neutral"><span class="rule-label">WATCHLIST</span><span class="rule-text">Neutral rating, or bullish but too expensive to buy now</span></div>
+                <div class="indicator-rule bearish"><span class="rule-label">AVOID</span><span class="rule-text">Bearish rating or 3+ risk flags</span></div>
+            </div>
+        </div>
+
+        <div class="cycle-limitations">
+            <h4>Important caveats</h4>
+            <ul>
+                <li>Signal cards are a <strong>screening tool</strong>, not a buy/sell recommendation. Always do your own research.</li>
+                <li>The data comes from yfinance and may have delays or inaccuracies — always verify key numbers.</li>
+                <li>Fundamental data is <strong>backward-looking</strong> — it tells you about the last reporting period, not the next one.</li>
+                <li>Sector context matters — a 10% margin is excellent for a supermarket but poor for a software company.</li>
+                <li>No single metric tells the full story. The power is in the <strong>combination</strong> of quality + growth + valuation + momentum.</li>
+            </ul>
+        </div>
+    </div>
+
+    {# ===== SOURCES ===== #}
+    <h2>Sources & Further Reading</h2>
+    <div class="sources-grid">
+        <div class="source-card">
+            <h4>Investopedia: Technical Indicators</h4>
+            <p>Comprehensive guides on RSI, MACD, Bollinger Bands, and moving averages with examples and charts.</p>
+            <span class="source-type">Learning</span>
+        </div>
+        <div class="source-card">
+            <h4>StockCharts: ChartSchool</h4>
+            <p>Free chart education with detailed breakdowns of every indicator, including how to combine them.</p>
+            <span class="source-type">Learning</span>
+        </div>
+        <div class="source-card">
+            <h4>Aswath Damodaran: Valuation</h4>
+            <p>NYU professor's lectures and spreadsheets on company valuation — the gold standard for fundamental analysis.</p>
+            <span class="source-type">Research</span>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

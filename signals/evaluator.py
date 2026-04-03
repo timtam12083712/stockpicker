@@ -89,9 +89,18 @@ def evaluate_stock(ticker: str) -> list[dict]:
 
 
 def store_signals(signals: list[dict]):
-    """Store fired signals in the database."""
+    """Store fired signals in the database, skipping duplicates for today."""
     conn = get_connection()
     for sig in signals:
+        # Skip if this exact signal already exists for today
+        existing = conn.execute(
+            """SELECT id FROM signals
+               WHERE ticker=? AND signal_name=? AND date=date('now')
+               LIMIT 1""",
+            (sig["ticker"], sig["signal_name"]),
+        ).fetchone()
+        if existing:
+            continue
         conn.execute(
             """INSERT INTO signals (ticker, date, signal_name, signal_type, indicator_values)
                VALUES (?, date('now'), ?, ?, ?)""",
