@@ -12,6 +12,24 @@
         <span class="macro-change {% if m.change_pct > 0 %}positive{% elif m.change_pct < 0 %}negative{% endif %}">{{ "%+.1f"|format(m.change_pct) }}%</span>
     </div>
     {% endfor %}
+
+    {% if cycle %}
+    <div class="macro-item cycle-indicator" title="{{ cycle.description }}">
+        <span class="cycle-dot" style="background:{{ cycle.color }}"></span>
+        <span class="macro-label">Cycle</span>
+        <span class="cycle-phase" style="color:{{ cycle.color }}">{{ cycle.label }}</span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if cycle %}
+<div class="cycle-sectors-bar">
+    <span class="cycle-sectors-label" style="color:{{ cycle.color }}">{{ cycle.label }} favours:</span>
+    {% for sector in cycle.sectors %}
+    <span class="cycle-sector-tag">{{ sector }}</span>
+    {% endfor %}
+    <span class="cycle-hint">{{ cycle.description }}</span>
 </div>
 {% endif %}
 

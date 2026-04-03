@@ -82,6 +82,150 @@ def get_macro_data():
     return results
 
 
+# Economic cycle detection
+_cycle_cache = {"data": None, "ts": 0}
+_cycle_lock = threading.Lock()
+
+# Cycle phases and their sector tilts (ASX-oriented)
+CYCLE_PHASES = {
+    "early_expansion": {
+        "label": "Early Expansion",
+        "description": "Recovery underway — rates low, earnings improving",
+        "sectors": ["Financials", "Consumer Discretionary", "Real Estate", "Technology"],
+        "color": "#34d399",
+    },
+    "mid_expansion": {
+        "label": "Mid Expansion",
+        "description": "Broad growth — capex rising, employment strong",
+        "sectors": ["Technology", "Industrials", "Materials", "Communication Services"],
+        "color": "#4f8ff7",
+    },
+    "late_expansion": {
+        "label": "Late Expansion",
+        "description": "Growth maturing — inflation rising, rates tightening",
+        "sectors": ["Energy", "Materials", "Healthcare", "Industrials"],
+        "color": "#fbbf24",
+    },
+    "contraction": {
+        "label": "Contraction",
+        "description": "Slowdown — yield curve flat/inverted, volatility elevated",
+        "sectors": ["Utilities", "Consumer Staples", "Healthcare", "Gold Miners"],
+        "color": "#f87171",
+    },
+    "trough": {
+        "label": "Trough",
+        "description": "Bottom forming — deep pessimism, policy easing",
+        "sectors": ["Financials", "Consumer Discretionary", "Technology", "Real Estate"],
+        "color": "#c084fc",
+    },
+}
+
+
+def _detect_cycle_phase():
+    """Heuristic economic cycle detection from market signals.
+
+    Uses: yield curve (10Y-2Y), VIX level, S&P 500 trend vs 200-day MA.
+    Returns a phase key from CYCLE_PHASES.
+    """
+    import pandas as pd
+
+    score = 0  # positive = expansionary, negative = contractionary
+
+    # 1) Yield curve: 10Y minus 2Y treasury yield
+    try:
+        tnx = yf.Ticker("^TNX")  # 10-year yield
+        twy = yf.Ticker("2YY=F")  # 2-year yield
+        y10 = tnx.fast_info.last_price
+        y2 = twy.fast_info.last_price
+        spread = y10 - y2
+        if spread < -0.5:
+            score -= 3  # deeply inverted
+        elif spread < 0:
+            score -= 1  # inverted
+        elif spread > 1.5:
+            score += 2  # steep — early recovery
+        else:
+            score += 1  # normal positive
+    except Exception:
+        spread = None
+
+    # 2) VIX level
+    try:
+        vix = yf.Ticker("^VIX")
+        vix_val = vix.fast_info.last_price
+        if vix_val > 30:
+            score -= 2  # high fear
+        elif vix_val > 20:
+            score -= 1  # elevated
+        elif vix_val < 14:
+            score += 2  # complacent / strong expansion
+        else:
+            score += 1  # normal
+    except Exception:
+        vix_val = None
+
+    # 3) S&P 500 vs 200-day MA
+    try:
+        spx = yf.Ticker("^GSPC")
+        hist = spx.history(period="1y")
+        if len(hist) >= 200:
+            ma200 = hist["Close"].rolling(200).mean().iloc[-1]
+            current = hist["Close"].iloc[-1]
+            pct_above = ((current - ma200) / ma200) * 100
+            if pct_above > 10:
+                score += 2  # well above — strong expansion
+            elif pct_above > 0:
+                score += 1  # above — expansion
+            elif pct_above > -10:
+                score -= 1  # below — weakening
+            else:
+                score -= 2  # well below — contraction
+        else:
+            pct_above = None
+    except Exception:
+        pct_above = None
+
+    # 4) Map score to phase
+    if score >= 4:
+        phase = "mid_expansion"
+    elif score >= 2:
+        phase = "early_expansion"
+    elif score >= 0:
+        phase = "late_expansion"
+    elif score >= -2:
+        phase = "contraction"
+    else:
+        phase = "trough"
+
+    return phase, score
+
+
+def get_economic_cycle():
+    """Get economic cycle phase with 10-min cache."""
+    with _cycle_lock:
+        if time.time() - _cycle_cache["ts"] < 600 and _cycle_cache["data"]:
+            return _cycle_cache["data"]
+
+    try:
+        phase_key, score = _detect_cycle_phase()
+        phase = CYCLE_PHASES[phase_key]
+        result = {
+            "phase": phase_key,
+            "label": phase["label"],
+            "description": phase["description"],
+            "sectors": phase["sectors"],
+            "color": phase["color"],
+            "score": score,
+        }
+    except Exception:
+        result = None
+
+    with _cycle_lock:
+        _cycle_cache["data"] = result
+        _cycle_cache["ts"] = time.time()
+    return result
+
+
 def make_sparkline(prices, width=120, height=32):
     """Generate an inline SVG sparkline from a list of prices."""
     if not prices or len(prices) < 2:
@@ -187,6 +331,7 @@ def dashboard():
     recent_splits = get_recent_splits()
 
     macro = get_macro_data()
+    cycle = get_economic_cycle()
 
     return render_template(
         "dashboard.html",
@@ -194,6 +339,7 @@ def dashboard():
         upcoming_divs=upcoming_divs,
         recent_splits=recent_splits,
         macro=macro,
+        cycle=cycle,
     )
 
 

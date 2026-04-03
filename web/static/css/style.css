@@ -89,6 +89,59 @@ h2 { margin: 1.5rem 0 0.75rem; color: var(--text-muted); font-size: 1rem; }
     font-weight: 600;
 }
 
+/* Economic cycle indicator in ticker bar */
+.cycle-indicator {
+    margin-left: auto;
+    border-right: none !important;
+    border-left: 1px solid var(--border);
+    gap: 0.35rem;
+}
+.cycle-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.cycle-phase {
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Cycle sector favourites bar */
+.cycle-sectors-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+}
+.cycle-sectors-label {
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+.cycle-sector-tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+.cycle-hint {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-style: italic;
+    margin-left: auto;
+}
+
 /* Flash messages */
 .flash { background: var(--accent); color: white; padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
 
