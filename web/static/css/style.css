@@ -1156,5 +1156,108 @@ a.ref-card:hover .ref-card-arrow { color: var(--card-color); }
     .sources-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ===== Portfolio Page ===== */
+.portfolio-page { max-width: 1200px; margin: 0 auto; }
+
+/* Summary metrics */
+.portfolio-summary {
+    display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.portfolio-metric {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.85rem 1.25rem; min-width: 160px; flex: 1;
+}
+.portfolio-metric-main { border-color: var(--accent); }
+.portfolio-metric-label {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; color: var(--text-muted); display: block;
+}
+.portfolio-metric-value { font-size: 1.4rem; font-weight: 800; display: block; margin: 0.1rem 0; }
+.portfolio-metric-main .portfolio-metric-value { color: var(--accent); }
+.portfolio-metric-sub { font-size: 0.78rem; color: var(--text-muted); }
+
+/* FX rates */
+.portfolio-fx { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.fx-rate {
+    font-size: 0.75rem; color: var(--text-muted); background: var(--surface);
+    padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid var(--border);
+}
+
+/* Allocation cards */
+.portfolio-alloc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+.alloc-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.85rem 1.1rem;
+}
+.alloc-card h4 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 0.5rem; }
+.alloc-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; font-size: 0.82rem; }
+.alloc-label { min-width: 90px; font-weight: 600; font-size: 0.78rem; }
+.alloc-bar-wrap { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.alloc-bar { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.3s; }
+.alloc-value { font-weight: 600; font-size: 0.78rem; min-width: 70px; text-align: right; }
+.alloc-pct { font-size: 0.72rem; color: var(--text-muted); min-width: 35px; text-align: right; }
+
+/* Actions */
+.portfolio-actions { margin-bottom: 1.25rem; display: flex; align-items: flex-start; }
+
+/* Broker sections */
+.broker-section {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.25rem; margin-bottom: 1rem;
+}
+.broker-section-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
+.broker-section-title h2 { font-size: 1rem; margin: 0; color: var(--text); }
+.broker-section-meta { font-size: 0.75rem; color: var(--text-muted); }
+.broker-section-totals { text-align: right; }
+.broker-total-value { font-size: 1rem; font-weight: 700; display: block; }
+.broker-total-pnl { font-size: 0.85rem; font-weight: 600; }
+.broker-last-sync { font-size: 0.7rem; color: var(--text-muted); display: block; }
+
+/* Portfolio table */
+.portfolio-table { width: 100%; border-collapse: collapse; }
+.portfolio-table th {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+    color: var(--text-muted); padding: 0.4rem 0.6rem; border-bottom: 2px solid var(--border);
+    text-align: left;
+}
+.portfolio-table th.num, .portfolio-table td.num { text-align: right; }
+.portfolio-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+.portfolio-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+.holding-symbol { font-weight: 700; font-size: 0.85rem; }
+.holding-name { display: block; font-size: 0.72rem; color: var(--text-muted); }
+
+/* Setup / no accounts state */
+.portfolio-setup { max-width: 800px; }
+.broker-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+.broker-option {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.85rem 1rem;
+}
+.broker-option h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
+.broker-option p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+.broker-currency { font-size: 0.68rem; font-weight: 700; color: var(--accent); background: rgba(79,143,247,0.1); padding: 0.1rem 0.4rem; border-radius: 3px; }
+
+.add-broker-section { margin-bottom: 1rem; }
+.add-broker-section summary { list-style: none; display: inline-block; cursor: pointer; }
+.add-broker-section summary::-webkit-details-marker { display: none; }
+.add-broker-form { display: flex; gap: 0.5rem; align-items: flex-end; margin-top: 0.75rem; flex-wrap: wrap; }
+.add-broker-form label { font-size: 0.78rem; color: var(--text-muted); }
+.add-broker-form select, .add-broker-form input {
+    display: block; margin-top: 0.2rem; padding: 0.4rem 0.5rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-size: 0.85rem;
+}
+
+.portfolio-setup-steps { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; }
+.portfolio-setup-steps h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+.portfolio-setup-steps ol { font-size: 0.82rem; line-height: 1.7; padding-left: 1.2rem; color: var(--text); }
+.portfolio-setup-steps code { background: var(--bg); padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.78rem; }
+
+@media (max-width: 768px) {
+    .portfolio-summary { flex-direction: column; }
+    .portfolio-alloc-grid { grid-template-columns: 1fr; }
+    .broker-options { grid-template-columns: 1fr; }
+}
+
 /* Footer */
 footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.75rem; }

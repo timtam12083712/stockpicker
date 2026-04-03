@@ -531,22 +531,128 @@ def journal_close(trade_id):
 
 @app.route("/portfolio")
 def portfolio():
-    """Portfolio view from latest snapshot."""
+    """Unified multi-broker portfolio view."""
     conn = get_connection()
-    latest_date = conn.execute(
-        "SELECT MAX(date) as d FROM portfolio_snapshot"
-    ).fetchone()
 
-    holdings = []
-    if latest_date and latest_date["d"]:
+    # Get all active broker accounts
+    accounts = conn.execute(
+        "SELECT * FROM broker_accounts WHERE active=1 ORDER BY broker_name"
+    ).fetchall()
+    accounts = [dict(a) for a in accounts]
+
+    # Get holdings per account
+    all_holdings = []
+    broker_totals = []
+    total_value_aud = 0
+    total_pnl_aud = 0
+    total_cost_aud = 0
+
+    for acc in accounts:
         holdings = conn.execute(
-            "SELECT * FROM portfolio_snapshot WHERE date=? ORDER BY ticker",
-            (latest_date["d"],),
+            "SELECT * FROM holdings WHERE account_id=? ORDER BY market_value_aud DESC",
+            (acc["id"],),
         ).fetchall()
         holdings = [dict(h) for h in holdings]
 
+        acc_value = sum(h["market_value_aud"] or 0 for h in holdings)
+        acc_pnl = sum(h["unrealised_pnl_aud"] or 0 for h in holdings)
+        acc_cost = sum(
+            (h["quantity"] or 0) * (h["avg_cost_native"] or 0)
+            for h in holdings if h["avg_cost_native"]
+        )
+
+        broker_totals.append({
+            "account": acc,
+            "holdings": holdings,
+            "total_value_aud": round(acc_value, 2),
+            "total_pnl_aud": round(acc_pnl, 2),
+            "holding_count": len(holdings),
+        })
+
+        total_value_aud += acc_value
+        total_pnl_aud += acc_pnl
+        all_holdings.extend(holdings)
+
+    # Calculate total cost basis in AUD
+    for acc_data in broker_totals:
+        acc = acc_data["account"]
+        from data.fx_rates import convert_to_aud
+        for h in acc_data["holdings"]:
+            if h["avg_cost_native"] and h["quantity"]:
+                total_cost_aud += convert_to_aud(
+                    h["quantity"] * h["avg_cost_native"],
+                    acc["currency"]
+                )
+
+    total_pnl_pct = round((total_value_aud / total_cost_aud - 1) * 100, 1) if total_cost_aud > 0 else 0
+
+    # Sector allocation
+    sector_alloc = {}
+    for h in all_holdings:
+        sector = h.get("sector") or "Unknown"
+        sector_alloc[sector] = sector_alloc.get(sector, 0) + (h["market_value_aud"] or 0)
+
+    # Geography allocation
+    geo_alloc = {}
+    for h in all_holdings:
+        geo = h.get("geography") or "OTHER"
+        geo_alloc[geo] = geo_alloc.get(geo, 0) + (h["market_value_aud"] or 0)
+
+    # Currency exposure
+    currency_alloc = {}
+    for acc_data in broker_totals:
+        curr = acc_data["account"]["currency"]
+        currency_alloc[curr] = currency_alloc.get(curr, 0) + acc_data["total_value_aud"]
+
+    # FX rates for display
+    from data.fx_rates import get_fx_rates
+    fx = get_fx_rates()
+
     conn.close()
-    return render_template("portfolio.html", holdings=holdings)
+
+    return render_template(
+        "portfolio.html",
+        accounts=accounts,
+        broker_totals=broker_totals,
+        total_value_aud=round(total_value_aud, 2),
+        total_pnl_aud=round(total_pnl_aud, 2),
+        total_pnl_pct=total_pnl_pct,
+        total_cost_aud=round(total_cost_aud, 2),
+        sector_alloc=sector_alloc,
+        geo_alloc=geo_alloc,
+        currency_alloc=currency_alloc,
+        fx=fx,
+        has_accounts=len(accounts) > 0,
+    )
+
+
+@app.route("/portfolio/sync")
+def portfolio_sync():
+    """Trigger a manual sync of all connected broker accounts."""
+    from data.fetch_portfolio import sync_all_portfolios
+    sync_all_portfolios()
+    flash("Portfolio sync complete.")
+    return redirect(url_for("portfolio"))
+
+
+@app.route("/portfolio/add-broker", methods=["POST"])
+def portfolio_add_broker():
+    """Add a new broker account."""
+    broker_name = request.form["broker_name"]
+    account_label = request.form["account_label"]
+    currency_map = {"commsec": "AUD", "ajbell": "GBP", "swyftx": "AUD", "etoro": "USD"}
+    conn_map = {"commsec": "snaptrade", "ajbell": "snaptrade", "swyftx": "api", "etoro": "csv"}
+
+    conn = get_connection()
+    conn.execute(
+        """INSERT INTO broker_accounts (broker_name, account_label, currency, connection_type)
+           VALUES (?, ?, ?, ?)""",
+        (broker_name, account_label, currency_map.get(broker_name, "AUD"), conn_map.get(broker_name, "csv")),
+    )
+    conn.commit()
+    conn.close()
+    flash(f"{account_label} added. Configure credentials in .env to connect.")
+    return redirect(url_for("portfolio"))
 
 
 @app.route("/ref")

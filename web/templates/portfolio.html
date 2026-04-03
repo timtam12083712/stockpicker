@@ -2,36 +2,237 @@
 {% block title %}Portfolio — ASX Stock Picker{% endblock %}
 
 {% block content %}
-<h1>Portfolio</h1>
 
-{% if holdings %}
-<table>
-    <thead>
-        <tr>
-            <th>Ticker</th>
-            <th>Quantity</th>
-            <th>Avg Cost</th>
-            <th>Current</th>
-            <th>Value</th>
-            <th>P&L</th>
-            <th>P&L %</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for h in holdings %}
-        <tr class="{{ 'winner' if (h.unrealised_pnl or 0) > 0 else 'loser' if (h.unrealised_pnl or 0) < 0 else '' }}">
-            <td>{{ h.ticker }}</td>
-            <td>{{ h.quantity }}</td>
-            <td>${{ "%.2f"|format(h.avg_cost) }}</td>
-            <td>${{ "%.2f"|format(h.current_price) }}</td>
-            <td>${{ "%.2f"|format(h.current_value) }}</td>
-            <td>${{ "%.2f"|format(h.unrealised_pnl) }}</td>
-            <td>{{ "%.1f"|format(h.unrealised_pnl_pct) }}%</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p class="empty-state">No portfolio data yet. Connect SnapTrade to sync your CommSec holdings, or portfolio snapshots will populate after the nightly run.</p>
-{% endif %}
+<div class="portfolio-page">
+    <h1>Portfolio</h1>
+
+    {% if not has_accounts %}
+    {# NO BROKERS CONNECTED #}
+    <div class="portfolio-setup">
+        <h2>Connect Your Brokers</h2>
+        <p class="section-intro">Add your broker accounts to see a unified view of your entire portfolio. All connections are <strong>read-only</strong> — this tool cannot move your money.</p>
+
+        <div class="broker-options">
+            <div class="broker-option">
+                <h4>CommSec</h4>
+                <p>Australian stocks via SnapTrade (read-only)</p>
+                <span class="broker-currency">AUD</span>
+            </div>
+            <div class="broker-option">
+                <h4>AJ Bell</h4>
+                <p>UK stocks/ISA via SnapTrade (read-only)</p>
+                <span class="broker-currency">GBP</span>
+            </div>
+            <div class="broker-option">
+                <h4>Swyftx</h4>
+                <p>Crypto via direct API (read-only key)</p>
+                <span class="broker-currency">AUD</span>
+            </div>
+            <div class="broker-option">
+                <h4>eToro</h4>
+                <p>Stocks/crypto via CSV export (manual)</p>
+                <span class="broker-currency">USD</span>
+            </div>
+        </div>
+
+        <details class="add-broker-section">
+            <summary class="btn">+ Add Broker Account</summary>
+            <form method="POST" action="{{ url_for('portfolio_add_broker') }}" class="add-broker-form">
+                <label>
+                    Broker
+                    <select name="broker_name" required>
+                        <option value="commsec">CommSec</option>
+                        <option value="ajbell">AJ Bell</option>
+                        <option value="swyftx">Swyftx</option>
+                        <option value="etoro">eToro</option>
+                    </select>
+                </label>
+                <label>
+                    Account Label
+                    <input type="text" name="account_label" placeholder="e.g. CommSec Main" required>
+                </label>
+                <button type="submit" class="btn">Add</button>
+            </form>
+        </details>
+
+        <div class="portfolio-setup-steps">
+            <h3>Setup Steps</h3>
+            <ol>
+                <li><strong>Add your broker account</strong> using the form above</li>
+                <li><strong>Register for SnapTrade</strong> (free) at <code>docs.snaptrade.com</code> — get your Client ID and Secret</li>
+                <li><strong>Add credentials</strong> to your <code>.env</code> file: <code>SNAPTRADE_CLIENT_ID</code> and <code>SNAPTRADE_CLIENT_SECRET</code></li>
+                <li><strong>Run setup</strong>: <code>python data/fetch_portfolio.py setup</code> — registers you with SnapTrade and gives you a login URL</li>
+                <li><strong>Connect your broker</strong> via the SnapTrade portal — your broker password goes to SnapTrade, not this app</li>
+                <li><strong>Sync</strong> — click "Sync Now" or wait for the nightly run</li>
+            </ol>
+        </div>
+    </div>
+
+    {% else %}
+    {# PORTFOLIO VIEW #}
+
+    {# SUMMARY BAR #}
+    <div class="portfolio-summary">
+        <div class="portfolio-metric portfolio-metric-main">
+            <span class="portfolio-metric-label">Total Portfolio</span>
+            <span class="portfolio-metric-value">${{ "{:,.0f}".format(total_value_aud) }}</span>
+            <span class="portfolio-metric-sub">AUD</span>
+        </div>
+        <div class="portfolio-metric">
+            <span class="portfolio-metric-label">Unrealised P&L</span>
+            <span class="portfolio-metric-value {% if total_pnl_aud >= 0 %}positive{% else %}negative{% endif %}">
+                {{ "{:+,.0f}".format(total_pnl_aud) }}
+            </span>
+            <span class="portfolio-metric-sub {% if total_pnl_pct >= 0 %}positive{% else %}negative{% endif %}">
+                {{ "%+.1f"|format(total_pnl_pct) }}%
+            </span>
+        </div>
+        <div class="portfolio-metric">
+            <span class="portfolio-metric-label">Cost Basis</span>
+            <span class="portfolio-metric-value">${{ "{:,.0f}".format(total_cost_aud) }}</span>
+            <span class="portfolio-metric-sub">AUD</span>
+        </div>
+        <div class="portfolio-metric">
+            <span class="portfolio-metric-label">Brokers</span>
+            <span class="portfolio-metric-value">{{ accounts|length }}</span>
+            <span class="portfolio-metric-sub">connected</span>
+        </div>
+    </div>
+
+    {# FX RATES #}
+    {% if fx %}
+    <div class="portfolio-fx">
+        {% if fx.gbp_aud %}<span class="fx-rate">GBP/AUD {{ "%.4f"|format(fx.gbp_aud) }}</span>{% endif %}
+        {% if fx.usd_aud %}<span class="fx-rate">USD/AUD {{ "%.4f"|format(fx.usd_aud) }}</span>{% endif %}
+    </div>
+    {% endif %}
+
+    {# ALLOCATION OVERVIEW #}
+    <div class="portfolio-alloc-grid">
+        {% if currency_alloc %}
+        <div class="alloc-card">
+            <h4>Currency Exposure</h4>
+            {% for curr, val in currency_alloc.items()|sort(attribute='1', reverse=true) %}
+            <div class="alloc-row">
+                <span class="alloc-label">{{ curr }}</span>
+                <div class="alloc-bar-wrap">
+                    <div class="alloc-bar" style="width: {{ (val / total_value_aud * 100) if total_value_aud else 0 }}%; background: {% if curr == 'AUD' %}var(--green){% elif curr == 'GBP' %}var(--accent){% else %}var(--yellow){% endif %}"></div>
+                </div>
+                <span class="alloc-value">${{ "{:,.0f}".format(val) }}</span>
+                <span class="alloc-pct">{{ "%.0f"|format(val / total_value_aud * 100) if total_value_aud else 0 }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if geo_alloc %}
+        <div class="alloc-card">
+            <h4>Geography</h4>
+            {% set geo_labels = {'AUS': 'Australia', 'GBR': 'United Kingdom', 'USA': 'United States', 'OTHER': 'Other'} %}
+            {% for geo, val in geo_alloc.items()|sort(attribute='1', reverse=true) %}
+            <div class="alloc-row">
+                <span class="alloc-label">{{ geo_labels.get(geo, geo) }}</span>
+                <div class="alloc-bar-wrap">
+                    <div class="alloc-bar" style="width: {{ (val / total_value_aud * 100) if total_value_aud else 0 }}%"></div>
+                </div>
+                <span class="alloc-value">${{ "{:,.0f}".format(val) }}</span>
+                <span class="alloc-pct">{{ "%.0f"|format(val / total_value_aud * 100) if total_value_aud else 0 }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# SYNC BUTTON #}
+    <div class="portfolio-actions">
+        <a href="{{ url_for('portfolio_sync') }}" class="btn">Sync Now</a>
+        <details class="add-broker-section" style="display: inline-block; margin-left: 0.5rem;">
+            <summary class="btn btn-secondary">+ Add Broker</summary>
+            <form method="POST" action="{{ url_for('portfolio_add_broker') }}" class="add-broker-form">
+                <label>
+                    Broker
+                    <select name="broker_name" required>
+                        <option value="commsec">CommSec</option>
+                        <option value="ajbell">AJ Bell</option>
+                        <option value="swyftx">Swyftx</option>
+                        <option value="etoro">eToro</option>
+                    </select>
+                </label>
+                <label>
+                    Label
+                    <input type="text" name="account_label" placeholder="e.g. AJ Bell ISA" required>
+                </label>
+                <button type="submit" class="btn">Add</button>
+            </form>
+        </details>
+    </div>
+
+    {# PER-BROKER SECTIONS #}
+    {% for bt in broker_totals %}
+    <div class="broker-section">
+        <div class="broker-section-header">
+            <div class="broker-section-title">
+                <h2>{{ bt.account.account_label }}</h2>
+                <span class="broker-section-meta">{{ bt.account.broker_name|title }} · {{ bt.account.currency }} · {{ bt.holding_count }} holding{{ 's' if bt.holding_count != 1 }}</span>
+            </div>
+            <div class="broker-section-totals">
+                <span class="broker-total-value">${{ "{:,.0f}".format(bt.total_value_aud) }} AUD</span>
+                <span class="broker-total-pnl {% if bt.total_pnl_aud >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ "{:+,.0f}".format(bt.total_pnl_aud) }}
+                </span>
+                {% if bt.account.last_sync %}
+                <span class="broker-last-sync">Last sync: {{ bt.account.last_sync }}</span>
+                {% else %}
+                <span class="broker-last-sync" style="color: var(--yellow)">Not yet synced</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if bt.holdings %}
+        <table class="portfolio-table">
+            <thead>
+                <tr>
+                    <th>Holding</th>
+                    <th class="num">Qty</th>
+                    <th class="num">Avg Cost{% if bt.account.currency != 'AUD' %} ({{ bt.account.currency }}){% endif %}</th>
+                    <th class="num">Price{% if bt.account.currency != 'AUD' %} ({{ bt.account.currency }}){% endif %}</th>
+                    <th class="num">Value (AUD)</th>
+                    <th class="num">P&L (AUD)</th>
+                    <th class="num">P&L %</th>
+                    <th class="num">% Portfolio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in bt.holdings %}
+                <tr>
+                    <td>
+                        <span class="holding-symbol">{{ h.symbol }}</span>
+                        {% if h.name %}<span class="holding-name">{{ h.name }}</span>{% endif %}
+                    </td>
+                    <td class="num">{{ h.quantity }}</td>
+                    <td class="num">{% if h.avg_cost_native %}{{ "%.2f"|format(h.avg_cost_native) }}{% else %}—{% endif %}</td>
+                    <td class="num">{{ "%.2f"|format(h.current_price_native) }}</td>
+                    <td class="num">${{ "{:,.0f}".format(h.market_value_aud) }}</td>
+                    <td class="num {% if (h.unrealised_pnl_aud or 0) > 0 %}positive{% elif (h.unrealised_pnl_aud or 0) < 0 %}negative{% endif %}">
+                        {% if h.unrealised_pnl_aud is not none %}{{ "{:+,.0f}".format(h.unrealised_pnl_aud) }}{% else %}—{% endif %}
+                    </td>
+                    <td class="num {% if (h.unrealised_pnl_pct or 0) > 0 %}positive{% elif (h.unrealised_pnl_pct or 0) < 0 %}negative{% endif %}">
+                        {% if h.unrealised_pnl_pct is not none %}{{ "%+.1f"|format(h.unrealised_pnl_pct) }}%{% else %}—{% endif %}
+                    </td>
+                    <td class="num">
+                        {% if total_value_aud %}{{ "%.1f"|format((h.market_value_aud or 0) / total_value_aud * 100) }}%{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">No holdings synced yet. Click "Sync Now" after connecting your broker.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% endif %}
+</div>
+
 {% endblock %}
