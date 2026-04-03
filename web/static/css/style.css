@@ -413,5 +413,318 @@ tr.loser td:nth-child(5), tr.loser td:nth-child(6) { color: var(--red); }
 /* Empty state */
 .empty-state { color: var(--text-muted); font-style: italic; padding: 2rem 0; }
 
+/* ===== Reference Hub ===== */
+.ref-page { max-width: 1100px; margin: 0 auto; }
+.ref-header { margin-bottom: 1.5rem; }
+.ref-subtitle { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }
+.ref-back {
+    display: inline-block;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.ref-back:hover { text-decoration: underline; }
+
+.ref-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+.ref-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+a.ref-card:hover {
+    border-color: var(--card-color);
+    box-shadow: 0 0 15px rgba(255,255,255,0.03);
+}
+.ref-card-coming { opacity: 0.5; cursor: default; }
+.ref-card-icon {
+    grid-row: 1 / 3;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 0.1rem;
+}
+.ref-card-body { grid-column: 2; }
+.ref-card-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+.ref-card-body p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+.ref-card-status {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.ref-card-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+.ref-card-live {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--green);
+}
+.ref-card-live::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 0.3rem;
+    vertical-align: middle;
+    animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+.ref-card-coming-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-style: italic;
+}
+.ref-card-arrow {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+a.ref-card:hover .ref-card-arrow { color: var(--card-color); }
+
+/* History table current row */
+.history-current td { font-weight: 700; }
+
+@media (max-width: 768px) {
+    .ref-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== Economic Cycle Page ===== */
+.cycle-page { max-width: 1100px; margin: 0 auto; }
+.cycle-page-header { margin-bottom: 1.5rem; }
+.cycle-subtitle { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }
+.section-intro { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; }
+
+/* Current phase hero */
+.cycle-hero {
+    background: var(--surface);
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+}
+.cycle-hero-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: block; }
+.cycle-hero-phase { font-size: 1.5rem; font-weight: 800; display: block; margin: 0.15rem 0; }
+.cycle-hero-desc { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; }
+.cycle-hero-sectors-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: block; margin-bottom: 0.4rem; }
+.cycle-hero-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.cycle-signal-detail { display: flex; align-items: baseline; gap: 0.4rem; margin-top: 0.3rem; }
+.cycle-signal-key { font-size: 0.78rem; color: var(--text-muted); }
+.cycle-signal-val { font-size: 1.3rem; font-weight: 800; }
+.cycle-signal-hint { font-size: 0.7rem; color: var(--text-muted); }
+
+/* SVG cycle diagram */
+.cycle-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+.cycle-svg { max-width: 700px; width: 100%; height: auto; }
+.cycle-svg .phase-label { font-size: 12px; font-weight: 700; font-family: inherit; }
+.cycle-svg .phase-label-active { font-size: 13px; font-weight: 800; }
+.cycle-svg .phase-dot { transition: all 0.2s; }
+.cycle-svg .phase-dot:hover { r: 12; filter: brightness(1.3); }
+.cycle-diagram-intro { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem; }
+
+/* Phase detail cards */
+.phase-cards { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+.phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--phase-color, var(--border));
+    border-radius: 0 8px 8px 0;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.phase-card-active {
+    border-color: var(--phase-color);
+    box-shadow: 0 0 20px rgba(255,255,255,0.03);
+}
+.phase-card-highlight {
+    box-shadow: 0 0 0 2px var(--phase-color) !important;
+}
+.phase-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+}
+.phase-card-header h3 { font-size: 1rem; font-weight: 700; margin: 0; }
+.phase-card-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.phase-card-badge {
+    margin-left: auto;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--phase-color);
+    color: var(--bg);
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+}
+.phase-card-body { padding: 0 1.25rem 1.25rem; }
+.phase-card-section { margin-bottom: 1rem; }
+.phase-card-section:last-child { margin-bottom: 0; }
+.phase-card-section h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+.phase-card-section p { font-size: 0.85rem; line-height: 1.6; color: var(--text); }
+.phase-card-section ul { font-size: 0.83rem; line-height: 1.7; color: var(--text); padding-left: 1.2rem; }
+.phase-card-section li { margin-bottom: 0.2rem; }
+.phase-card-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }
+.phase-card-why { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+/* Detection methodology cards */
+.detection-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.detection-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+}
+.detection-card h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.6rem; }
+.detection-card p { font-size: 0.82rem; line-height: 1.55; color: var(--text-muted); margin-bottom: 0.5rem; }
+.detection-scale {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0.75rem;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.detection-range {
+    flex: 1;
+    padding: 0.25rem 0.3rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-align: center;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    color: var(--text-muted);
+}
+.detection-range:last-child { border-right: none; }
+.detection-range.positive { background: rgba(52, 211, 153, 0.1); color: var(--green); }
+.detection-range.negative { background: rgba(248, 113, 113, 0.1); color: var(--red); }
+.detection-scoring { font-size: 0.75rem; color: var(--text-muted); background: var(--bg); padding: 0.4rem 0.6rem; border-radius: 4px; }
+
+/* Score mapping summary */
+.scoring-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+}
+.scoring-summary h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.75rem; }
+.score-ranges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.score-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    background: var(--bg);
+    border-radius: 4px;
+    border-left: 3px solid var(--range-color);
+}
+.score-range-val { font-size: 0.8rem; font-weight: 700; color: var(--range-color); font-family: monospace; }
+.score-range-label { font-size: 0.8rem; color: var(--text); }
+
+/* ASX examples table */
+.cycle-asx-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+.cycle-asx-table th { text-align: left; padding: 0.5rem 0.75rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+.cycle-asx-table td { padding: 0.6rem 0.75rem; font-size: 0.83rem; border-bottom: 1px solid var(--border); }
+.phase-tag { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 3px; font-size: 0.73rem; font-weight: 600; white-space: nowrap; }
+
+/* Limitations box */
+.cycle-limitations {
+    background: var(--surface);
+    border: 1px solid var(--yellow);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+}
+.cycle-limitations h4 { font-size: 0.85rem; font-weight: 700; color: var(--yellow); margin-bottom: 0.5rem; }
+.cycle-limitations ul { font-size: 0.82rem; line-height: 1.7; color: var(--text-muted); padding-left: 1.2rem; }
+
+/* Sources grid */
+.sources-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+.source-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+}
+.source-card h4 { font-size: 0.83rem; font-weight: 700; margin-bottom: 0.3rem; }
+.source-card p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.4rem; }
+.source-type {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    background: rgba(79, 143, 247, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .cycle-hero { grid-template-columns: 1fr; }
+    .detection-grid { grid-template-columns: 1fr; }
+    .sources-grid { grid-template-columns: 1fr 1fr; }
+}
+
 /* Footer */
 footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.75rem; }

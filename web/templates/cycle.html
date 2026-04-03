@@ -1,0 +1,584 @@
+{% extends "base.html" %}
+{% block title %}Economic Cycle — ASX Stock Picker{% endblock %}
+
+{% block content %}
+
+<div class="cycle-page">
+
+    <div class="cycle-page-header">
+        <a href="{{ url_for('reference') }}" class="ref-back">&larr; Back to Reference</a>
+        <h1>Economic Cycle</h1>
+        <p class="cycle-subtitle">Understanding where we are in the business cycle helps you tilt towards sectors that historically outperform in each phase. This page updates dynamically based on live market signals.</p>
+    </div>
+
+    {# ===== CURRENT PHASE HERO ===== #}
+    {% if cycle %}
+    <div class="cycle-hero" style="border-color: {{ cycle.color }}">
+        <div class="cycle-hero-left">
+            <span class="cycle-hero-label">We are currently in</span>
+            <span class="cycle-hero-phase" style="color: {{ cycle.color }}">{{ cycle.label }}</span>
+            <p class="cycle-hero-desc">{{ cycle.description }}</p>
+        </div>
+        <div class="cycle-hero-sectors">
+            <span class="cycle-hero-sectors-label">Favoured sectors right now:</span>
+            <div class="cycle-hero-tags">
+                {% for s in cycle.sectors %}
+                <span class="cycle-sector-tag" style="border-color: {{ cycle.color }}">{{ s }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="cycle-hero-signals">
+            <span class="cycle-hero-sectors-label">Detection signals:</span>
+            <div class="cycle-signal-detail">
+                <span class="cycle-signal-key">Composite score</span>
+                <span class="cycle-signal-val" style="color: {{ cycle.color }}">{{ cycle.score }}</span>
+                <span class="cycle-signal-hint">(+5 = strong expansion, -5 = deep trough)</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ===== INTERACTIVE CYCLE DIAGRAM ===== #}
+    <h2>The Business Cycle</h2>
+    <p class="cycle-diagram-intro">Click any phase to learn more. The <strong>highlighted phase</strong> is where market signals suggest we are now.</p>
+
+    <div class="cycle-diagram">
+        <svg viewBox="0 0 700 380" class="cycle-svg" xmlns="http://www.w3.org/2000/svg">
+            {# Wave path representing the cycle #}
+            <path d="M 30 280 C 100 280, 120 80, 210 80 C 300 80, 310 80, 350 180 C 390 280, 430 340, 520 340 C 580 340, 620 280, 670 200"
+                  fill="none" stroke="#2a2d3a" stroke-width="3" stroke-linecap="round"/>
+
+            {# Phase zones along the wave #}
+            {# Trough #}
+            <circle cx="50" cy="275" r="8" fill="{{ '#c084fc' if cycle and cycle.phase == 'trough' else '#2a2d3a' }}" class="phase-dot" data-phase="trough"/>
+            <text x="50" y="310" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'trough' %}phase-label-active{% endif %}" fill="{{ '#c084fc' if cycle and cycle.phase == 'trough' else '#8b8fa3' }}">Trough</text>
+
+            {# Early Expansion #}
+            <circle cx="160" cy="150" r="8" fill="{{ '#34d399' if cycle and cycle.phase == 'early_expansion' else '#2a2d3a' }}" class="phase-dot" data-phase="early_expansion"/>
+            <text x="160" y="133" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'early_expansion' %}phase-label-active{% endif %}" fill="{{ '#34d399' if cycle and cycle.phase == 'early_expansion' else '#8b8fa3' }}">Early</text>
+            <text x="160" y="118" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'early_expansion' %}phase-label-active{% endif %}" fill="{{ '#34d399' if cycle and cycle.phase == 'early_expansion' else '#8b8fa3' }}">Expansion</text>
+
+            {# Mid Expansion (peak of the wave) #}
+            <circle cx="260" cy="80" r="8" fill="{{ '#4f8ff7' if cycle and cycle.phase == 'mid_expansion' else '#2a2d3a' }}" class="phase-dot" data-phase="mid_expansion"/>
+            <text x="260" y="63" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'mid_expansion' %}phase-label-active{% endif %}" fill="{{ '#4f8ff7' if cycle and cycle.phase == 'mid_expansion' else '#8b8fa3' }}">Mid</text>
+            <text x="260" y="48" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'mid_expansion' %}phase-label-active{% endif %}" fill="{{ '#4f8ff7' if cycle and cycle.phase == 'mid_expansion' else '#8b8fa3' }}">Expansion</text>
+
+            {# Late Expansion #}
+            <circle cx="380" cy="190" r="8" fill="{{ '#fbbf24' if cycle and cycle.phase == 'late_expansion' else '#2a2d3a' }}" class="phase-dot" data-phase="late_expansion"/>
+            <text x="380" y="175" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'late_expansion' %}phase-label-active{% endif %}" fill="{{ '#fbbf24' if cycle and cycle.phase == 'late_expansion' else '#8b8fa3' }}">Late</text>
+            <text x="380" y="160" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'late_expansion' %}phase-label-active{% endif %}" fill="{{ '#fbbf24' if cycle and cycle.phase == 'late_expansion' else '#8b8fa3' }}">Expansion</text>
+
+            {# Contraction #}
+            <circle cx="520" cy="335" r="8" fill="{{ '#f87171' if cycle and cycle.phase == 'contraction' else '#2a2d3a' }}" class="phase-dot" data-phase="contraction"/>
+            <text x="520" y="365" text-anchor="middle" class="phase-label {% if cycle and cycle.phase == 'contraction' %}phase-label-active{% endif %}" fill="{{ '#f87171' if cycle and cycle.phase == 'contraction' else '#8b8fa3' }}">Contraction</text>
+
+            {# "You are here" marker #}
+            {% if cycle %}
+            {% set marker_positions = {
+                'trough': (50, 255),
+                'early_expansion': (160, 130),
+                'mid_expansion': (260, 60),
+                'late_expansion': (380, 170),
+                'contraction': (520, 315)
+            } %}
+            {% set mx, my = marker_positions[cycle.phase] %}
+            <circle cx="{{ mx }}" cy="{{ my }}" r="14" fill="none" stroke="{{ cycle.color }}" stroke-width="2" opacity="0.5">
+                <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.5;0.15;0.5" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            {% endif %}
+
+            {# Arrows showing direction #}
+            <text x="110" y="225" fill="#8b8fa3" font-size="16">&#x2197;</text>
+            <text x="310" y="100" fill="#8b8fa3" font-size="16">&#x2198;</text>
+            <text x="450" y="270" fill="#8b8fa3" font-size="16">&#x2198;</text>
+            <text x="620" y="250" fill="#8b8fa3" font-size="16">&#x2197;</text>
+
+            {# Axis labels #}
+            <text x="350" y="375" text-anchor="middle" fill="#8b8fa3" font-size="11">Time &#x2192;</text>
+            <text x="15" y="190" text-anchor="middle" fill="#8b8fa3" font-size="11" transform="rotate(-90 15 190)">Economic Activity</text>
+        </svg>
+    </div>
+
+    {# ===== PHASE DETAIL CARDS ===== #}
+    <h2>Phase-by-Phase Guide</h2>
+    <p class="section-intro">Each phase of the business cycle has distinct characteristics, leading indicators, and sector tilts. Transitions don't happen overnight — watch the triggers to anticipate what's coming next.</p>
+
+    <div class="phase-cards">
+
+        {# --- TROUGH --- #}
+        <div class="phase-card {% if cycle and cycle.phase == 'trough' %}phase-card-active{% endif %}" id="phase-trough" style="--phase-color: #c084fc">
+            <div class="phase-card-header">
+                <span class="phase-card-dot" style="background: #c084fc"></span>
+                <h3>Trough</h3>
+                {% if cycle and cycle.phase == 'trough' %}<span class="phase-card-badge">Current Phase</span>{% endif %}
+            </div>
+            <div class="phase-card-body">
+                <div class="phase-card-section">
+                    <h4>What's happening</h4>
+                    <p>The economy has bottomed out. GDP growth is near zero or negative but stabilising. Unemployment is high but new jobless claims are peaking. Consumer and business confidence is at its lowest. Central banks have typically cut rates aggressively and may be using unconventional policy (QE).</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Key indicators</h4>
+                    <ul>
+                        <li><strong>Yield curve:</strong> Steepening after inversion — short rates falling as central bank cuts</li>
+                        <li><strong>VIX:</strong> Elevated (25-40+) but may be declining from peak</li>
+                        <li><strong>PMI/ISM:</strong> Below 50 but turning up</li>
+                        <li><strong>Credit spreads:</strong> Wide but starting to narrow</li>
+                        <li><strong>Earnings:</strong> Negative revisions slowing, forward guidance improving</li>
+                    </ul>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Favoured sectors</h4>
+                    <div class="phase-card-tags">
+                        <span class="cycle-sector-tag">Financials</span>
+                        <span class="cycle-sector-tag">Consumer Discretionary</span>
+                        <span class="cycle-sector-tag">Technology</span>
+                        <span class="cycle-sector-tag">Real Estate</span>
+                    </div>
+                    <p class="phase-card-why"><strong>Why:</strong> Rate-sensitive sectors rally first as markets price in recovery before it shows in economic data. Banks benefit from a steepening yield curve. Beaten-down cyclicals get re-rated.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Transition triggers (Trough &rarr; Early Expansion)</h4>
+                    <ul>
+                        <li>PMI crosses back above 50</li>
+                        <li>Jobless claims begin sustained decline</li>
+                        <li>Credit conditions ease — lending picks up</li>
+                        <li>Consumer confidence turns positive</li>
+                        <li>Stock market sustained rally from lows (often leads by 6-9 months)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {# --- EARLY EXPANSION --- #}
+        <div class="phase-card {% if cycle and cycle.phase == 'early_expansion' %}phase-card-active{% endif %}" id="phase-early_expansion" style="--phase-color: #34d399">
+            <div class="phase-card-header">
+                <span class="phase-card-dot" style="background: #34d399"></span>
+                <h3>Early Expansion</h3>
+                {% if cycle and cycle.phase == 'early_expansion' %}<span class="phase-card-badge">Current Phase</span>{% endif %}
+            </div>
+            <div class="phase-card-body">
+                <div class="phase-card-section">
+                    <h4>What's happening</h4>
+                    <p>Recovery is underway. GDP growth is accelerating from a low base. Employment is growing, consumers are spending again. Interest rates remain low — monetary policy is still accommodative. Credit is flowing. Corporate earnings are recovering quickly (easy comparisons to the downturn).</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Key indicators</h4>
+                    <ul>
+                        <li><strong>Yield curve:</strong> Steep — short rates low, long rates rising on growth expectations</li>
+                        <li><strong>VIX:</strong> Declining towards 15-20 range</li>
+                        <li><strong>PMI/ISM:</strong> Above 50 and rising</li>
+                        <li><strong>Unemployment:</strong> High but falling</li>
+                        <li><strong>Earnings:</strong> Strong positive revisions, beats common</li>
+                    </ul>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Favoured sectors</h4>
+                    <div class="phase-card-tags">
+                        <span class="cycle-sector-tag">Financials</span>
+                        <span class="cycle-sector-tag">Consumer Discretionary</span>
+                        <span class="cycle-sector-tag">Real Estate</span>
+                        <span class="cycle-sector-tag">Technology</span>
+                    </div>
+                    <p class="phase-card-why"><strong>Why:</strong> Banks earn more on the steep yield curve. Consumers with pent-up demand start spending on discretionary goods. Low rates fuel real estate. Tech capex rebounds as businesses invest in growth again.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Transition triggers (Early &rarr; Mid Expansion)</h4>
+                    <ul>
+                        <li>Unemployment drops below long-run average</li>
+                        <li>Central bank signals first rate hike</li>
+                        <li>Capacity utilisation rises above 75-80%</li>
+                        <li>Wage growth accelerates</li>
+                        <li>Business investment (capex) broadens beyond recovery sectors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {# --- MID EXPANSION --- #}
+        <div class="phase-card {% if cycle and cycle.phase == 'mid_expansion' %}phase-card-active{% endif %}" id="phase-mid_expansion" style="--phase-color: #4f8ff7">
+            <div class="phase-card-header">
+                <span class="phase-card-dot" style="background: #4f8ff7"></span>
+                <h3>Mid Expansion</h3>
+                {% if cycle and cycle.phase == 'mid_expansion' %}<span class="phase-card-badge">Current Phase</span>{% endif %}
+            </div>
+            <div class="phase-card-body">
+                <div class="phase-card-section">
+                    <h4>What's happening</h4>
+                    <p>The economy is in full swing. Growth is broad-based. Employment is strong, wages rising. Central banks are normalising rates — moving from accommodative to neutral. Corporate profits are healthy. This is often the longest phase and the "sweet spot" for equities.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Key indicators</h4>
+                    <ul>
+                        <li><strong>Yield curve:</strong> Flattening gradually as central bank hikes short rates</li>
+                        <li><strong>VIX:</strong> Low and stable (12-16)</li>
+                        <li><strong>PMI/ISM:</strong> Solidly above 50 (52-58)</li>
+                        <li><strong>Unemployment:</strong> Low and still falling</li>
+                        <li><strong>Inflation:</strong> Rising but still within target range</li>
+                    </ul>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Favoured sectors</h4>
+                    <div class="phase-card-tags">
+                        <span class="cycle-sector-tag">Technology</span>
+                        <span class="cycle-sector-tag">Industrials</span>
+                        <span class="cycle-sector-tag">Materials</span>
+                        <span class="cycle-sector-tag">Communication Services</span>
+                    </div>
+                    <p class="phase-card-why"><strong>Why:</strong> Broad growth lifts industrials and materials (construction, infrastructure, commodities). Tech benefits from continued capex and innovation spending. Earnings growth favours growth stocks over value.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Transition triggers (Mid &rarr; Late Expansion)</h4>
+                    <ul>
+                        <li>Inflation exceeds central bank target persistently</li>
+                        <li>Yield curve flattens significantly (10Y-2Y spread &lt; 0.5%)</li>
+                        <li>Central bank turns hawkish — accelerated tightening</li>
+                        <li>Labour market overheats — wage-price spiral concerns</li>
+                        <li>Corporate margins begin to compress</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {# --- LATE EXPANSION --- #}
+        <div class="phase-card {% if cycle and cycle.phase == 'late_expansion' %}phase-card-active{% endif %}" id="phase-late_expansion" style="--phase-color: #fbbf24">
+            <div class="phase-card-header">
+                <span class="phase-card-dot" style="background: #fbbf24"></span>
+                <h3>Late Expansion</h3>
+                {% if cycle and cycle.phase == 'late_expansion' %}<span class="phase-card-badge">Current Phase</span>{% endif %}
+            </div>
+            <div class="phase-card-body">
+                <div class="phase-card-section">
+                    <h4>What's happening</h4>
+                    <p>Growth is mature and decelerating. Inflation is elevated, forcing aggressive central bank tightening. The yield curve is flat or inverting. Corporate costs are rising (wages, materials, interest). Profit margins are under pressure. This is the danger zone — the economy is vulnerable to shocks.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Key indicators</h4>
+                    <ul>
+                        <li><strong>Yield curve:</strong> Flat to inverted (10Y-2Y near zero or negative)</li>
+                        <li><strong>VIX:</strong> Rising from low levels (16-22)</li>
+                        <li><strong>PMI/ISM:</strong> Still above 50 but declining</li>
+                        <li><strong>Inflation:</strong> Above target, sticky</li>
+                        <li><strong>Credit:</strong> Lending standards tightening, spreads widening</li>
+                    </ul>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Favoured sectors</h4>
+                    <div class="phase-card-tags">
+                        <span class="cycle-sector-tag">Energy</span>
+                        <span class="cycle-sector-tag">Materials</span>
+                        <span class="cycle-sector-tag">Healthcare</span>
+                        <span class="cycle-sector-tag">Industrials</span>
+                    </div>
+                    <p class="phase-card-why"><strong>Why:</strong> Commodities benefit from inflation and supply constraints. Energy companies have pricing power. Healthcare is defensive with steady demand. Value stocks outperform growth as rising rates compress multiples.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Transition triggers (Late Expansion &rarr; Contraction)</h4>
+                    <ul>
+                        <li>Yield curve deeply inverts (historically leads recession by 12-18 months)</li>
+                        <li>PMI drops below 50</li>
+                        <li>Employment growth stalls, jobless claims rise</li>
+                        <li>Consumer confidence drops sharply</li>
+                        <li>Credit event or financial stress (bank failures, corporate defaults)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {# --- CONTRACTION --- #}
+        <div class="phase-card {% if cycle and cycle.phase == 'contraction' %}phase-card-active{% endif %}" id="phase-contraction" style="--phase-color: #f87171">
+            <div class="phase-card-header">
+                <span class="phase-card-dot" style="background: #f87171"></span>
+                <h3>Contraction</h3>
+                {% if cycle and cycle.phase == 'contraction' %}<span class="phase-card-badge">Current Phase</span>{% endif %}
+            </div>
+            <div class="phase-card-body">
+                <div class="phase-card-section">
+                    <h4>What's happening</h4>
+                    <p>The economy is shrinking. GDP is declining, unemployment rising. Corporate earnings are falling. Central banks pivot to cutting rates but it takes time to feed through. Risk appetite is low — investors flee to safety. Cash, bonds, and defensive equities outperform. This is where most investors lose money, but also where the best long-term buying opportunities emerge.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Key indicators</h4>
+                    <ul>
+                        <li><strong>Yield curve:</strong> Un-inverting as central bank cuts aggressively — but initially still flat</li>
+                        <li><strong>VIX:</strong> High (25-45+), spikes on bad news</li>
+                        <li><strong>PMI/ISM:</strong> Below 50 and falling</li>
+                        <li><strong>Unemployment:</strong> Rising rapidly</li>
+                        <li><strong>Earnings:</strong> Negative growth, downgrades across sectors</li>
+                    </ul>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Favoured sectors</h4>
+                    <div class="phase-card-tags">
+                        <span class="cycle-sector-tag">Utilities</span>
+                        <span class="cycle-sector-tag">Consumer Staples</span>
+                        <span class="cycle-sector-tag">Healthcare</span>
+                        <span class="cycle-sector-tag">Gold Miners</span>
+                    </div>
+                    <p class="phase-card-why"><strong>Why:</strong> Defensive sectors with inelastic demand hold up best. People still pay power bills, buy groceries, and need healthcare. Gold acts as a safe haven. Dividends become the main source of returns.</p>
+                </div>
+                <div class="phase-card-section">
+                    <h4>Transition triggers (Contraction &rarr; Trough)</h4>
+                    <ul>
+                        <li>Rate cuts reach "accommodative" territory</li>
+                        <li>Jobless claims peak and begin declining</li>
+                        <li>PMI stabilises near 45-48 and stops falling</li>
+                        <li>Government fiscal stimulus takes effect</li>
+                        <li>Inventories fully destocked — restocking cycle begins</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {# ===== HOW DETECTION WORKS ===== #}
+    <h2>How We Detect the Current Phase</h2>
+    <p class="section-intro">The cycle indicator on the dashboard uses a composite scoring model based on three real-time market signals. No single indicator is reliable alone — the combination provides a more robust estimate.</p>
+
+    <div class="detection-grid">
+        <div class="detection-card">
+            <h4>Yield Curve (10Y-2Y Spread)</h4>
+            <div class="detection-meter">
+                <div class="detection-scale">
+                    <span class="detection-range negative">Inverted &lt; 0%</span>
+                    <span class="detection-range">Flat 0-0.5%</span>
+                    <span class="detection-range">Normal 0.5-1.5%</span>
+                    <span class="detection-range positive">Steep &gt; 1.5%</span>
+                </div>
+            </div>
+            <p>The yield curve is the single best recession predictor. When short-term rates exceed long-term rates (inversion), it signals markets expect rate cuts ahead — typically because they expect an economic downturn. Every US recession since 1970 was preceded by an inversion, though timing varies (6-24 months lead).</p>
+            <p class="detection-scoring"><strong>Scoring:</strong> Deeply inverted (&lt;-0.5%) = -3 | Inverted = -1 | Steep (&gt;1.5%) = +2 | Normal = +1</p>
+        </div>
+
+        <div class="detection-card">
+            <h4>VIX (Volatility Index)</h4>
+            <div class="detection-meter">
+                <div class="detection-scale">
+                    <span class="detection-range positive">Low &lt; 14</span>
+                    <span class="detection-range">Normal 14-20</span>
+                    <span class="detection-range">Elevated 20-30</span>
+                    <span class="detection-range negative">Fear &gt; 30</span>
+                </div>
+            </div>
+            <p>The VIX measures expected S&P 500 volatility over the next 30 days. High VIX means fear and uncertainty — correlated with contractions and troughs. Very low VIX suggests complacency, typical of mid-expansion. It's a coincident indicator (tells you where you are now, not where you're heading).</p>
+            <p class="detection-scoring"><strong>Scoring:</strong> Fear (&gt;30) = -2 | Elevated = -1 | Complacent (&lt;14) = +2 | Normal = +1</p>
+        </div>
+
+        <div class="detection-card">
+            <h4>S&P 500 vs 200-Day Moving Average</h4>
+            <div class="detection-meter">
+                <div class="detection-scale">
+                    <span class="detection-range negative">Well below &lt; -10%</span>
+                    <span class="detection-range">Below -10 to 0%</span>
+                    <span class="detection-range">Above 0-10%</span>
+                    <span class="detection-range positive">Well above &gt; 10%</span>
+                </div>
+            </div>
+            <p>The 200-day moving average is a widely followed trend indicator. When the market is well above it, the trend is bullish and the economy is likely expanding. When below, the trend has broken down. Markets lead the economy by 6-9 months, so this often turns before GDP data confirms a recession or recovery.</p>
+            <p class="detection-scoring"><strong>Scoring:</strong> Well above (&gt;10%) = +2 | Above = +1 | Below = -1 | Well below = -2</p>
+        </div>
+    </div>
+
+    <div class="scoring-summary">
+        <h4>Composite Score Mapping</h4>
+        <div class="score-ranges">
+            <div class="score-range" style="--range-color: #4f8ff7">
+                <span class="score-range-val">+4 to +6</span>
+                <span class="score-range-label">Mid Expansion</span>
+            </div>
+            <div class="score-range" style="--range-color: #34d399">
+                <span class="score-range-val">+2 to +3</span>
+                <span class="score-range-label">Early Expansion</span>
+            </div>
+            <div class="score-range" style="--range-color: #fbbf24">
+                <span class="score-range-val">0 to +1</span>
+                <span class="score-range-label">Late Expansion</span>
+            </div>
+            <div class="score-range" style="--range-color: #f87171">
+                <span class="score-range-val">-1 to -2</span>
+                <span class="score-range-label">Contraction</span>
+            </div>
+            <div class="score-range" style="--range-color: #c084fc">
+                <span class="score-range-val">-3 to -6</span>
+                <span class="score-range-label">Trough</span>
+            </div>
+        </div>
+    </div>
+
+    {# ===== ASX SECTOR EXAMPLES ===== #}
+    <h2>ASX Sector Examples</h2>
+    <p class="section-intro">How these phases map to real ASX-listed companies and ETFs you might encounter on your watchlist.</p>
+
+    <table class="cycle-asx-table">
+        <thead>
+            <tr>
+                <th>Sector</th>
+                <th>Best Phase</th>
+                <th>ASX Examples</th>
+                <th>Why it outperforms then</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Financials</strong></td>
+                <td><span class="phase-tag" style="background: #34d39922; color: #34d399">Early Expansion</span></td>
+                <td>CBA, WBC, NAB, MQG</td>
+                <td>Steep yield curve widens net interest margins; bad debts decline as economy improves</td>
+            </tr>
+            <tr>
+                <td><strong>Consumer Disc.</strong></td>
+                <td><span class="phase-tag" style="background: #34d39922; color: #34d399">Early Expansion</span></td>
+                <td>WES, HVN, JBH, ALL</td>
+                <td>Pent-up demand released; low rates encourage big-ticket spending</td>
+            </tr>
+            <tr>
+                <td><strong>Technology</strong></td>
+                <td><span class="phase-tag" style="background: #4f8ff722; color: #4f8ff7">Mid Expansion</span></td>
+                <td>XRO, WTC, CPU, TNE</td>
+                <td>Business capex in full swing; growth stocks benefit from "risk on" environment</td>
+            </tr>
+            <tr>
+                <td><strong>Industrials</strong></td>
+                <td><span class="phase-tag" style="background: #4f8ff722; color: #4f8ff7">Mid Expansion</span></td>
+                <td>TCL, SYD, BXB, DOW</td>
+                <td>Infrastructure and transport volumes rise with broad economic activity</td>
+            </tr>
+            <tr>
+                <td><strong>Materials</strong></td>
+                <td><span class="phase-tag" style="background: #fbbf2422; color: #fbbf24">Late Expansion</span></td>
+                <td>BHP, RIO, FMG, S32</td>
+                <td>Commodity prices peak on high demand + supply constraints; inflation hedge</td>
+            </tr>
+            <tr>
+                <td><strong>Energy</strong></td>
+                <td><span class="phase-tag" style="background: #fbbf2422; color: #fbbf24">Late Expansion</span></td>
+                <td>WDS, STO, WHC, KAR</td>
+                <td>Oil/gas prices elevated; demand still strong before slowdown hits</td>
+            </tr>
+            <tr>
+                <td><strong>Healthcare</strong></td>
+                <td><span class="phase-tag" style="background: #f8717122; color: #f87171">Contraction</span></td>
+                <td>CSL, COH, RMD, FPH</td>
+                <td>Non-discretionary demand; people don't defer healthcare in a downturn</td>
+            </tr>
+            <tr>
+                <td><strong>Consumer Staples</strong></td>
+                <td><span class="phase-tag" style="background: #f8717122; color: #f87171">Contraction</span></td>
+                <td>WOW, COL, TWE, A2M</td>
+                <td>Grocery/essential spending is recession-proof; stable dividends</td>
+            </tr>
+            <tr>
+                <td><strong>Utilities</strong></td>
+                <td><span class="phase-tag" style="background: #f8717122; color: #f87171">Contraction</span></td>
+                <td>AGL, ORG, APA, SKI</td>
+                <td>Regulated revenues, essential services, high yields attract capital in risk-off</td>
+            </tr>
+            <tr>
+                <td><strong>Real Estate</strong></td>
+                <td><span class="phase-tag" style="background: #c084fc22; color: #c084fc">Trough</span></td>
+                <td>GMG, SCG, GPT, MGR</td>
+                <td>Rate cuts revive property valuations; REITs rally on falling discount rates</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# ===== LIMITATIONS ===== #}
+    <div class="cycle-limitations">
+        <h4>Limitations to keep in mind</h4>
+        <ul>
+            <li>This is a <strong>heuristic model</strong> using three market signals — it's a learning aid, not a trading signal</li>
+            <li>Cycle phases don't have clean boundaries — transitions are gradual and messy</li>
+            <li>Sector rotation is a tendency, not a guarantee — individual stocks can buck the trend</li>
+            <li>External shocks (pandemics, wars, policy surprises) can abruptly change the cycle</li>
+            <li>The model uses <strong>US market signals</strong> — the ASX generally follows the US cycle with a lag, but Australia's commodity-heavy economy has its own dynamics</li>
+            <li>Past sector rotation patterns may not repeat exactly in future cycles</li>
+        </ul>
+    </div>
+
+    {# ===== CYCLE HISTORY ===== #}
+    {% if history and history|length > 1 %}
+    <h2>Phase History</h2>
+    <p class="section-intro">How the detected cycle phase has changed over time. Each row is a daily snapshot saved when you visit this page.</p>
+    <div class="cycle-history">
+        <table class="cycle-asx-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Phase</th>
+                    <th>Score</th>
+                    <th>Favoured Sectors</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history[:30] %}
+                <tr {% if loop.first %}class="history-current"{% endif %}>
+                    <td>{{ h.date }}</td>
+                    <td>
+                        {% set phase_colors = {'early_expansion': '#34d399', 'mid_expansion': '#4f8ff7', 'late_expansion': '#fbbf24', 'contraction': '#f87171', 'trough': '#c084fc'} %}
+                        <span class="phase-tag" style="background: {{ phase_colors.get(h.phase, '#8b8fa3') }}22; color: {{ phase_colors.get(h.phase, '#8b8fa3') }}">{{ h.label }}</span>
+                    </td>
+                    <td style="font-family: monospace; font-weight: 700; color: {{ phase_colors.get(h.phase, '#8b8fa3') }}">{{ h.score }}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-muted)">{{ h.sectors }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# ===== SOURCES ===== #}
+    <h2>Sources & Further Reading</h2>
+    <div class="sources-grid">
+        <div class="source-card">
+            <h4>Fidelity: Business Cycle Approach to Sector Investing</h4>
+            <p>Fidelity's framework for mapping sectors to cycle phases. The foundation for most modern sector rotation strategies.</p>
+            <span class="source-type">Framework</span>
+        </div>
+        <div class="source-card">
+            <h4>NBER Business Cycle Dating</h4>
+            <p>The official arbiter of US recession start/end dates. Historical cycle data going back to the 1850s.</p>
+            <span class="source-type">Data</span>
+        </div>
+        <div class="source-card">
+            <h4>Federal Reserve: Yield Curve as a Recession Predictor</h4>
+            <p>Research papers from the NY Fed on why the 10Y-2Y spread predicts recessions with 12-18 month lead time.</p>
+            <span class="source-type">Research</span>
+        </div>
+        <div class="source-card">
+            <h4>RBA: The Australian Business Cycle</h4>
+            <p>Reserve Bank of Australia research on how Australia's cycle differs from the US — shorter, commodity-influenced, and closely tied to China.</p>
+            <span class="source-type">Research</span>
+        </div>
+        <div class="source-card">
+            <h4>CBOE VIX White Paper</h4>
+            <p>How the VIX is calculated, what it actually measures (30-day implied vol), and its relationship to market regime changes.</p>
+            <span class="source-type">Methodology</span>
+        </div>
+        <div class="source-card">
+            <h4>Investopedia: Sector Rotation</h4>
+            <p>Accessible overview of how and why money flows between sectors at different points in the cycle. Good starting point.</p>
+            <span class="source-type">Learning</span>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Click phase dots on SVG to scroll to the corresponding card
+document.querySelectorAll('.phase-dot').forEach(dot => {
+    dot.style.cursor = 'pointer';
+    dot.addEventListener('click', function() {
+        const phase = this.dataset.phase;
+        const card = document.getElementById('phase-' + phase);
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('phase-card-highlight');
+            setTimeout(() => card.classList.remove('phase-card-highlight'), 2000);
+        }
+    });
+});
+</script>
+
+{% endblock %}

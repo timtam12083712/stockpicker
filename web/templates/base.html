@@ -14,6 +14,7 @@
             <a href="{{ url_for('signals') }}" {% if request.endpoint == 'signals' %}class="active"{% endif %}>Signals</a>
             <a href="{{ url_for('journal') }}" {% if request.endpoint in ('journal', 'journal_new') %}class="active"{% endif %}>Journal</a>
             <a href="{{ url_for('portfolio') }}" {% if request.endpoint == 'portfolio' %}class="active"{% endif %}>Portfolio</a>
+            <a href="{{ url_for('reference') }}" {% if request.endpoint in ('reference', 'ref_cycle') %}class="active"{% endif %}>Ref</a>
         </div>
     </nav>
 

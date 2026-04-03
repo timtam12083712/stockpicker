@@ -226,6 +226,54 @@ def get_economic_cycle():
     return result
 
 
+def _init_cycle_table():
+    """Create cycle_history table if it doesn't exist."""
+    conn = get_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS cycle_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            phase TEXT NOT NULL,
+            label TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            description TEXT,
+            sectors TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(date)
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def _save_cycle_snapshot(cycle):
+    """Persist today's cycle phase if not already saved."""
+    if not cycle:
+        return
+    _init_cycle_table()
+    today = date.today().isoformat()
+    conn = get_connection()
+    conn.execute(
+        """INSERT OR REPLACE INTO cycle_history (date, phase, label, score, description, sectors)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (today, cycle["phase"], cycle["label"], cycle["score"],
+         cycle["description"], json.dumps(cycle["sectors"])),
+    )
+    conn.commit()
+    conn.close()
+
+
+def _get_cycle_history(limit=90):
+    """Retrieve recent cycle history."""
+    _init_cycle_table()
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM cycle_history ORDER BY date DESC LIMIT ?", (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 def make_sparkline(prices, width=120, height=32):
     """Generate an inline SVG sparkline from a list of prices."""
     if not prices or len(prices) < 2:
@@ -432,6 +480,22 @@ def portfolio():
 
     conn.close()
     return render_template("portfolio.html", holdings=holdings)
+
+
+@app.route("/ref")
+def reference():
+    """Reference hub — learning sections."""
+    cycle = get_economic_cycle()
+    return render_template("reference.html", cycle=cycle)
+
+
+@app.route("/ref/cycle")
+def ref_cycle():
+    """Economic cycle learning page — dynamic, shows current phase."""
+    cycle = get_economic_cycle()
+    _save_cycle_snapshot(cycle)
+    history = _get_cycle_history()
+    return render_template("cycle.html", cycle=cycle, phases=CYCLE_PHASES, history=history)
 
 
 @app.route("/watchlist/add", methods=["POST"])
