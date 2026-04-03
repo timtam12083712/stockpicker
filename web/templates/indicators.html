@@ -32,66 +32,134 @@
         <div class="indicator-card">
             <div class="indicator-what">
                 <h4>What it is</h4>
-                <p>A <strong>Simple Moving Average (SMA)</strong> is the average closing price over a set number of days. The two most common are the <strong>50-day SMA</strong> (short-term trend) and the <strong>200-day SMA</strong> (long-term trend).</p>
-                <p>Think of it as a "smoothed" version of the price — it filters out daily noise and shows you the underlying direction.</p>
+                <p>A <strong>Simple Moving Average (SMA)</strong> is the average closing price over a set number of days. It smooths out daily price noise so you can see the underlying trend.</p>
+                <p>Imagine plotting the last 50 days of closing prices and drawing a line through the average — that's the 50-day SMA. Each day, the oldest price drops off and today's is added, so the line moves with the trend.</p>
             </div>
+
+            <div class="indicator-what">
+                <h4>The two key moving averages</h4>
+                <table class="indicator-table">
+                    <thead>
+                        <tr><th>Moving Average</th><th>What it measures</th><th>Timeframe</th><th>Used for</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>50-day SMA</strong></td>
+                            <td>Average closing price over the last ~2.5 months of trading</td>
+                            <td>Short/medium term</td>
+                            <td>Identifying the recent trend direction. Traders watch whether price is above or below this line.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>200-day SMA</strong></td>
+                            <td>Average closing price over the last ~10 months of trading</td>
+                            <td>Long term</td>
+                            <td>The most widely watched MA by institutional investors. Defines the long-term trend. Often acts as support or resistance.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="indicator-how">
                 <h4>How to read it</h4>
                 <div class="indicator-rules">
-                    <div class="indicator-rule bullish">
-                        <span class="rule-label">Bullish</span>
-                        <span class="rule-text">Price above 50-day SMA — short-term uptrend</span>
+                    <div class="indicator-rule bullish-mild">
+                        <span class="rule-label">Mildly Bullish</span>
+                        <span class="rule-text">Price above 50-day SMA — short-term uptrend is intact</span>
                     </div>
-                    <div class="indicator-rule bullish">
-                        <span class="rule-label">Bullish</span>
-                        <span class="rule-text">Price above 200-day SMA — long-term uptrend</span>
+                    <div class="indicator-rule bullish-strong">
+                        <span class="rule-label">Strongly Bullish</span>
+                        <span class="rule-text">Price above 200-day SMA — long-term uptrend, institutions are buying</span>
                     </div>
-                    <div class="indicator-rule bearish">
-                        <span class="rule-label">Bearish</span>
-                        <span class="rule-text">Price below 50-day SMA — short-term downtrend</span>
+                    <div class="indicator-rule bullish-strong">
+                        <span class="rule-label">Strongly Bullish</span>
+                        <span class="rule-text">Price above BOTH 50 &amp; 200 SMA, with 50 above 200 — the strongest trend confirmation</span>
                     </div>
-                    <div class="indicator-rule bearish">
-                        <span class="rule-label">Bearish</span>
-                        <span class="rule-text">Price below 200-day SMA — long-term downtrend</span>
+                    <div class="indicator-rule bearish-mild">
+                        <span class="rule-label">Mildly Bearish</span>
+                        <span class="rule-text">Price below 50-day SMA — short-term weakness, but long-term trend may still be intact</span>
+                    </div>
+                    <div class="indicator-rule bearish-strong">
+                        <span class="rule-label">Strongly Bearish</span>
+                        <span class="rule-text">Price below 200-day SMA — long-term trend has broken, institutions selling</span>
+                    </div>
+                    <div class="indicator-rule bearish-strong">
+                        <span class="rule-label">Strongly Bearish</span>
+                        <span class="rule-text">Price below BOTH 50 &amp; 200 SMA, with 50 below 200 — the weakest trend configuration</span>
                     </div>
                 </div>
             </div>
+
             <div class="indicator-signals">
                 <h4>Dashboard signals generated</h4>
-                <div class="signal-tags">
-                    <span class="signal-tag signal-tag-bullish">Price above 50MA</span>
-                    <span class="signal-tag signal-tag-bearish">Price below 50MA</span>
-                    <span class="signal-tag signal-tag-bullish">Golden Cross</span>
-                    <span class="signal-tag signal-tag-bearish">Death Cross</span>
-                    <span class="signal-tag signal-tag-bullish">Above 200DMA</span>
-                    <span class="signal-tag signal-tag-bearish">Below 200DMA</span>
-                </div>
+                <table class="indicator-table">
+                    <thead>
+                        <tr><th>Signal</th><th>Type</th><th>What it means</th><th>Strength</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bullish">Price above 50MA</span></td>
+                            <td>Bullish</td>
+                            <td>Current price is above the 50-day average — the short-term trend is up</td>
+                            <td class="strength-mild-bull">Mild</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bearish">Price below 50MA</span></td>
+                            <td>Bearish</td>
+                            <td>Current price has fallen below the 50-day average — short-term weakness</td>
+                            <td class="strength-mild-bear">Mild</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bullish">Above 200DMA</span></td>
+                            <td>Bullish</td>
+                            <td>Price is above the 200-day average — the long-term trend supports buying</td>
+                            <td class="strength-strong-bull">Strong</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bearish">Below 200DMA</span></td>
+                            <td>Bearish</td>
+                            <td>Price has broken below the 200-day average — long-term trend is down</td>
+                            <td class="strength-strong-bear">Strong</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bullish">Golden Cross</span></td>
+                            <td>Bullish</td>
+                            <td>The 50-day SMA has crossed above the 200-day SMA — classic trend reversal to the upside. Rare signal (happens once every 1-3 years per stock)</td>
+                            <td class="strength-strong-bull">Very Strong</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bearish">Death Cross</span></td>
+                            <td>Bearish</td>
+                            <td>The 50-day SMA has crossed below the 200-day SMA — trend reversal to the downside. Often marks the start of a prolonged decline</td>
+                            <td class="strength-strong-bear">Very Strong</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <div class="indicator-deep-dive">
-            <h4>Golden Cross & Death Cross</h4>
-            <p>These are <strong>crossover signals</strong> — when one moving average crosses another:</p>
+            <h4>How the 200-day SMA works in practice</h4>
+            <p>The 200-day SMA is the single most important moving average. Here's why:</p>
             <ul>
-                <li><strong>Golden Cross:</strong> The 50-day SMA crosses <em>above</em> the 200-day SMA. This is a classic bullish signal suggesting the trend has shifted from bearish to bullish. Historically, stocks tend to rally after a golden cross — but it's a <strong>lagging indicator</strong> (the move has often already started).</li>
-                <li><strong>Death Cross:</strong> The 50-day SMA crosses <em>below</em> the 200-day SMA. The opposite — suggests a shift to a bearish trend. Can signal the start of a prolonged decline, but also produces false signals in sideways markets.</li>
+                <li><strong>Institutional benchmark:</strong> Many fund managers have rules like "don't buy stocks below their 200-day." When a stock drops below, these funds sell, adding more selling pressure.</li>
+                <li><strong>Support in uptrends:</strong> In a healthy uptrend, the price will often dip to the 200-day SMA and bounce — this is called "testing support." If you see a quality stock pull back to its 200-day SMA in an uptrend, it can be a buying opportunity.</li>
+                <li><strong>Resistance in downtrends:</strong> When a stock is below its 200-day SMA and rallies back to it, the average often acts as a ceiling — the stock fails to break above and falls again.</li>
             </ul>
 
-            <h4>The 200-day SMA in particular</h4>
-            <p>The 200-day SMA is the single most widely watched moving average by institutional investors. Many fund managers use it as a "line in the sand":</p>
+            <h4>Golden Cross & Death Cross explained</h4>
+            <p>These are <strong>crossover events</strong> — when the 50-day and 200-day moving averages cross each other. They're significant because they signal a <em>structural change</em> in the trend:</p>
             <ul>
-                <li>Stocks trading <strong>above</strong> their 200-day SMA are considered to be in an uptrend — institutions are more willing to buy</li>
-                <li>Stocks trading <strong>below</strong> are in a downtrend — institutions become cautious, selling pressure increases</li>
-                <li>The 200-day SMA often acts as <strong>support</strong> (price bounces off it in an uptrend) or <strong>resistance</strong> (price fails to break above it in a downtrend)</li>
+                <li><strong>Golden Cross</strong> (50 crosses above 200): Signals the short-term trend has turned positive enough for long enough to pull above the long-term average. Historically, stocks rally an average of 10-15% in the year following a golden cross. However, it's a <strong>lagging signal</strong> — by the time it fires, the stock has often already risen 15-20% from its low.</li>
+                <li><strong>Death Cross</strong> (50 crosses below 200): The opposite. The short-term trend has deteriorated enough to drag below the long-term. Can signal the start of a prolonged decline (months to years), but also produces <strong>false signals</strong> in choppy sideways markets.</li>
             </ul>
-            <p>On the signal cards, the <strong>Momentum</strong> section shows whether each stock is above or below its 200-day SMA and by how much.</p>
 
             <h4>Limitations</h4>
             <ul>
-                <li>Moving averages are <strong>lagging</strong> — they tell you where the trend has been, not where it's going</li>
-                <li>In <strong>sideways/choppy markets</strong>, the price whipsaws back and forth across the SMA, generating false signals</li>
-                <li>They work best in <strong>trending markets</strong> — strong uptrends or downtrends</li>
-                <li>A golden cross doesn't mean "buy now" — the best entry might have been weeks earlier when the price bottomed</li>
+                <li>Moving averages are <strong>lagging indicators</strong> — they confirm what already happened, they don't predict what's next</li>
+                <li>In <strong>sideways/choppy markets</strong>, the price whipsaws back and forth across the SMA, generating false buy/sell signals</li>
+                <li>They work best in <strong>clearly trending markets</strong> — strong uptrends or downtrends</li>
+                <li>A golden cross doesn't mean "buy now" — the best entry was often weeks earlier when the price bottomed</li>
+                <li>Different stocks have different relationships with their moving averages — some respect them closely, others ignore them</li>
             </ul>
         </div>
     </div>
@@ -124,10 +192,25 @@
             </div>
             <div class="indicator-signals">
                 <h4>Dashboard signals generated</h4>
-                <div class="signal-tags">
-                    <span class="signal-tag signal-tag-bullish">RSI Oversold</span>
-                    <span class="signal-tag signal-tag-bearish">RSI Overbought</span>
-                </div>
+                <table class="indicator-table">
+                    <thead>
+                        <tr><th>Signal</th><th>Type</th><th>What it means</th><th>Strength</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bullish">RSI Oversold</span></td>
+                            <td>Entry</td>
+                            <td>RSI has dropped below 30 — aggressive selling may be overdone. Watch for a reversal, but don't buy blindly — confirm with fundamentals.</td>
+                            <td class="strength-mild-bull">Moderate</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bearish">RSI Overbought</span></td>
+                            <td>Exit</td>
+                            <td>RSI has risen above 70 — the rally may be stretched. Consider trimming or tightening stop losses, but strong stocks can stay overbought for months.</td>
+                            <td class="strength-mild-bear">Moderate</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -167,10 +250,25 @@
             </div>
             <div class="indicator-signals">
                 <h4>Dashboard signals generated</h4>
-                <div class="signal-tags">
-                    <span class="signal-tag signal-tag-bullish">MACD Crossover</span>
-                    <span class="signal-tag signal-tag-bearish">MACD Crossunder</span>
-                </div>
+                <table class="indicator-table">
+                    <thead>
+                        <tr><th>Signal</th><th>Type</th><th>What it means</th><th>Strength</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bullish">MACD Crossover</span></td>
+                            <td>Bullish</td>
+                            <td>The MACD line has crossed above the signal line — short-term momentum is turning positive. More reliable after a prolonged decline than during sideways action.</td>
+                            <td class="strength-mild-bull">Moderate</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bearish">MACD Crossunder</span></td>
+                            <td>Bearish</td>
+                            <td>The MACD line has crossed below the signal line — momentum is fading. Often an early warning before a larger move down.</td>
+                            <td class="strength-mild-bear">Moderate</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -241,9 +339,19 @@
             </div>
             <div class="indicator-signals">
                 <h4>Dashboard signals generated</h4>
-                <div class="signal-tags">
-                    <span class="signal-tag signal-tag-neutral">Volume Spike</span>
-                </div>
+                <table class="indicator-table">
+                    <thead>
+                        <tr><th>Signal</th><th>Type</th><th>What it means</th><th>Strength</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-neutral">Volume Spike</span></td>
+                            <td>Attention</td>
+                            <td>Volume is more than 2x the 20-day average — something is driving unusual activity (earnings, news, institutional block trade). Investigate the cause before acting.</td>
+                            <td class="strength-neutral">Info</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -282,10 +390,25 @@
             </div>
             <div class="indicator-signals">
                 <h4>Dashboard signals generated</h4>
-                <div class="signal-tags">
-                    <span class="signal-tag signal-tag-bullish">Near 52-week Low</span>
-                    <span class="signal-tag signal-tag-bearish">Near 52-week High</span>
-                </div>
+                <table class="indicator-table">
+                    <thead>
+                        <tr><th>Signal</th><th>Type</th><th>What it means</th><th>Strength</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bullish">Near 52-week Low</span></td>
+                            <td>Entry</td>
+                            <td>Price is within 5% of the 52-week low — potential value opportunity if fundamentals are sound. Could also be a falling knife if the business is deteriorating.</td>
+                            <td class="strength-mild-bull">Moderate</td>
+                        </tr>
+                        <tr>
+                            <td><span class="signal-tag signal-tag-bearish">Near 52-week High</span></td>
+                            <td>Exit</td>
+                            <td>Price is within 3% of the 52-week high — may be extended. Consider if there's further upside, or if it's time to take profits. Strong stocks often make new highs.</td>
+                            <td class="strength-mild-bear">Mild</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
