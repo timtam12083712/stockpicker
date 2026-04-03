@@ -172,6 +172,15 @@ CREATE TABLE IF NOT EXISTS etoro_imports (
     status          TEXT DEFAULT 'success' CHECK (status IN ('success', 'partial', 'error'))
 );
 
+CREATE TABLE IF NOT EXISTS cash_holdings (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    label           TEXT NOT NULL,          -- e.g. 'Emergency Fund', 'ISA Cash', 'Offset Account'
+    currency        TEXT NOT NULL DEFAULT 'AUD' CHECK (currency IN ('AUD', 'GBP', 'USD', 'EUR')),
+    amount          REAL NOT NULL,
+    notes           TEXT,
+    updated_at      DATETIME NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_prices_ticker_date ON prices(ticker, date);
 CREATE INDEX IF NOT EXISTS idx_signals_ticker_date ON signals(ticker, date);

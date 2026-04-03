@@ -605,8 +605,32 @@ def portfolio():
         currency_alloc[curr] = currency_alloc.get(curr, 0) + acc_data["total_value_aud"]
 
     # FX rates for display
-    from data.fx_rates import get_fx_rates
+    from data.fx_rates import get_fx_rates, convert_to_aud
     fx = get_fx_rates()
+
+    # Cash holdings
+    cash_rows = conn.execute("SELECT * FROM cash_holdings ORDER BY currency, label").fetchall()
+    cash_holdings = [dict(r) for r in cash_rows]
+
+    total_cash_aud = 0
+    for c in cash_holdings:
+        c["amount_aud"] = convert_to_aud(c["amount"], c["currency"], fx)
+        total_cash_aud += c["amount_aud"]
+        # Add to currency allocation
+        currency_alloc[c["currency"]] = currency_alloc.get(c["currency"], 0) + c["amount_aud"]
+
+    total_value_aud += total_cash_aud
+
+    # Recalculate P&L pct with cash included in total
+    total_pnl_pct = round((total_pnl_aud / total_cost_aud) * 100, 1) if total_cost_aud > 0 else 0
+
+    # Dual currency: convert everything to GBP as well
+    gbp_rate = fx.get("gbp_aud", 1.0) or 1.0  # 1 GBP = X AUD
+    aud_to_gbp = 1.0 / gbp_rate if gbp_rate else 1.0
+    total_value_gbp = round(total_value_aud * aud_to_gbp, 2)
+    total_pnl_gbp = round(total_pnl_aud * aud_to_gbp, 2)
+    total_cost_gbp = round(total_cost_aud * aud_to_gbp, 2)
+    total_cash_gbp = round(total_cash_aud * aud_to_gbp, 2)
 
     conn.close()
 
@@ -615,14 +639,21 @@ def portfolio():
         accounts=accounts,
         broker_totals=broker_totals,
         total_value_aud=round(total_value_aud, 2),
+        total_value_gbp=total_value_gbp,
         total_pnl_aud=round(total_pnl_aud, 2),
+        total_pnl_gbp=total_pnl_gbp,
         total_pnl_pct=total_pnl_pct,
         total_cost_aud=round(total_cost_aud, 2),
+        total_cost_gbp=total_cost_gbp,
+        total_cash_aud=round(total_cash_aud, 2),
+        total_cash_gbp=total_cash_gbp,
         sector_alloc=sector_alloc,
         geo_alloc=geo_alloc,
         currency_alloc=currency_alloc,
         fx=fx,
-        has_accounts=len(accounts) > 0,
+        aud_to_gbp=aud_to_gbp,
+        cash_holdings=cash_holdings,
+        has_accounts=len(accounts) > 0 or len(cash_holdings) > 0,
     )
 
 
@@ -652,6 +683,47 @@ def portfolio_add_broker():
     conn.commit()
     conn.close()
     flash(f"{account_label} added. Configure credentials in .env to connect.")
+    return redirect(url_for("portfolio"))
+
+
+@app.route("/portfolio/cash/add", methods=["POST"])
+def portfolio_cash_add():
+    """Add a cash holding."""
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO cash_holdings (label, currency, amount, notes) VALUES (?, ?, ?, ?)",
+        (request.form["label"], request.form["currency"],
+         float(request.form["amount"]), request.form.get("notes", "")),
+    )
+    conn.commit()
+    conn.close()
+    flash(f"Cash added: {request.form['label']}")
+    return redirect(url_for("portfolio"))
+
+
+@app.route("/portfolio/cash/delete/<int:cash_id>", methods=["POST"])
+def portfolio_cash_delete(cash_id):
+    """Delete a cash holding."""
+    conn = get_connection()
+    conn.execute("DELETE FROM cash_holdings WHERE id=?", (cash_id,))
+    conn.commit()
+    conn.close()
+    flash("Cash entry removed.")
+    return redirect(url_for("portfolio"))
+
+
+@app.route("/portfolio/cash/edit/<int:cash_id>", methods=["POST"])
+def portfolio_cash_edit(cash_id):
+    """Update a cash holding."""
+    conn = get_connection()
+    conn.execute(
+        "UPDATE cash_holdings SET label=?, currency=?, amount=?, notes=?, updated_at=datetime('now') WHERE id=?",
+        (request.form["label"], request.form["currency"],
+         float(request.form["amount"]), request.form.get("notes", ""), cash_id),
+    )
+    conn.commit()
+    conn.close()
+    flash("Cash entry updated.")
     return redirect(url_for("portfolio"))
 
 

@@ -1210,7 +1210,11 @@ a.ref-card:hover .ref-card-arrow { color: var(--card-color); }
 .broker-section-meta { font-size: 0.75rem; color: var(--text-muted); }
 .broker-section-totals { text-align: right; }
 .broker-total-value { font-size: 1rem; font-weight: 700; display: block; }
+.broker-total-gbp { font-size: 0.78rem; color: var(--text-muted); display: block; }
 .broker-total-pnl { font-size: 0.85rem; font-weight: 600; }
+
+.add-cash-section summary { list-style: none; display: inline-block; cursor: pointer; }
+.add-cash-section summary::-webkit-details-marker { display: none; }
 .broker-last-sync { font-size: 0.7rem; color: var(--text-muted); display: block; }
 
 /* Portfolio table */

@@ -71,31 +71,33 @@
     {% else %}
     {# PORTFOLIO VIEW #}
 
-    {# SUMMARY BAR #}
-    <div class="portfolio-summary">
-        <div class="portfolio-metric portfolio-metric-main">
-            <span class="portfolio-metric-label">Total Portfolio</span>
-            <span class="portfolio-metric-value">${{ "{:,.0f}".format(total_value_aud) }}</span>
-            <span class="portfolio-metric-sub">AUD</span>
-        </div>
-        <div class="portfolio-metric">
-            <span class="portfolio-metric-label">Unrealised P&L</span>
-            <span class="portfolio-metric-value {% if total_pnl_aud >= 0 %}positive{% else %}negative{% endif %}">
-                {{ "{:+,.0f}".format(total_pnl_aud) }}
-            </span>
-            <span class="portfolio-metric-sub {% if total_pnl_pct >= 0 %}positive{% else %}negative{% endif %}">
-                {{ "%+.1f"|format(total_pnl_pct) }}%
-            </span>
-        </div>
-        <div class="portfolio-metric">
-            <span class="portfolio-metric-label">Cost Basis</span>
-            <span class="portfolio-metric-value">${{ "{:,.0f}".format(total_cost_aud) }}</span>
-            <span class="portfolio-metric-sub">AUD</span>
-        </div>
-        <div class="portfolio-metric">
-            <span class="portfolio-metric-label">Brokers</span>
-            <span class="portfolio-metric-value">{{ accounts|length }}</span>
-            <span class="portfolio-metric-sub">connected</span>
+    {# DUAL CURRENCY SUMMARY #}
+    <div class="portfolio-currency-toggle">
+        <div class="portfolio-summary">
+            <div class="portfolio-metric portfolio-metric-main">
+                <span class="portfolio-metric-label">Total Portfolio</span>
+                <span class="portfolio-metric-value">${{ "{:,.0f}".format(total_value_aud) }}</span>
+                <span class="portfolio-metric-sub">AUD</span>
+            </div>
+            <div class="portfolio-metric">
+                <span class="portfolio-metric-label">In GBP</span>
+                <span class="portfolio-metric-value">&pound;{{ "{:,.0f}".format(total_value_gbp) }}</span>
+                <span class="portfolio-metric-sub">GBP</span>
+            </div>
+            <div class="portfolio-metric">
+                <span class="portfolio-metric-label">Investments P&L</span>
+                <span class="portfolio-metric-value {% if total_pnl_aud >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ "{:+,.0f}".format(total_pnl_aud) }}
+                </span>
+                <span class="portfolio-metric-sub {% if total_pnl_pct >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ "%+.1f"|format(total_pnl_pct) }}%
+                </span>
+            </div>
+            <div class="portfolio-metric">
+                <span class="portfolio-metric-label">Cash</span>
+                <span class="portfolio-metric-value">${{ "{:,.0f}".format(total_cash_aud) }}</span>
+                <span class="portfolio-metric-sub">AUD (£{{ "{:,.0f}".format(total_cash_gbp) }} GBP)</span>
+            </div>
         </div>
     </div>
 
@@ -177,6 +179,7 @@
             </div>
             <div class="broker-section-totals">
                 <span class="broker-total-value">${{ "{:,.0f}".format(bt.total_value_aud) }} AUD</span>
+                <span class="broker-total-gbp">&pound;{{ "{:,.0f}".format(bt.total_value_aud * aud_to_gbp) }} GBP</span>
                 <span class="broker-total-pnl {% if bt.total_pnl_aud >= 0 %}positive{% else %}negative{% endif %}">
                     {{ "{:+,.0f}".format(bt.total_pnl_aud) }}
                 </span>
@@ -231,6 +234,89 @@
         {% endif %}
     </div>
     {% endfor %}
+
+    {# CASH HOLDINGS #}
+    <div class="broker-section">
+        <div class="broker-section-header">
+            <div class="broker-section-title">
+                <h2>Cash</h2>
+                <span class="broker-section-meta">Manual entries · Multiple currencies</span>
+            </div>
+            <div class="broker-section-totals">
+                <span class="broker-total-value">${{ "{:,.0f}".format(total_cash_aud) }} AUD</span>
+                <span class="broker-last-sync">&pound;{{ "{:,.0f}".format(total_cash_gbp) }} GBP</span>
+            </div>
+        </div>
+
+        {% if cash_holdings %}
+        <table class="portfolio-table">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th class="num">Amount</th>
+                    <th class="num">Currency</th>
+                    <th class="num">Value (AUD)</th>
+                    <th class="num">Value (GBP)</th>
+                    <th class="num">% Portfolio</th>
+                    <th>Notes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cash_holdings %}
+                <tr>
+                    <td><span class="holding-symbol">{{ c.label }}</span></td>
+                    <td class="num">
+                        {% if c.currency == 'GBP' %}&pound;{% elif c.currency == 'USD' %}${% elif c.currency == 'EUR' %}&euro;{% else %}${% endif %}{{ "{:,.2f}".format(c.amount) }}
+                    </td>
+                    <td class="num">{{ c.currency }}</td>
+                    <td class="num">${{ "{:,.0f}".format(c.amount_aud) }}</td>
+                    <td class="num">&pound;{{ "{:,.0f}".format(c.amount_aud * aud_to_gbp) }}</td>
+                    <td class="num">
+                        {% if total_value_aud %}{{ "%.1f"|format(c.amount_aud / total_value_aud * 100) }}%{% endif %}
+                    </td>
+                    <td><span style="font-size: 0.75rem; color: var(--text-muted)">{{ c.notes or '' }}</span></td>
+                    <td>
+                        <form method="POST" action="{{ url_for('portfolio_cash_delete', cash_id=c.id) }}" style="display:inline">
+                            <button type="submit" class="btn btn-remove btn-small" title="Delete">x</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">No cash entries yet. Add your savings, offset accounts, ISA cash, etc.</p>
+        {% endif %}
+
+        <details class="add-cash-section">
+            <summary class="btn btn-secondary btn-small" style="margin-top: 0.5rem">+ Add Cash</summary>
+            <form method="POST" action="{{ url_for('portfolio_cash_add') }}" class="add-broker-form">
+                <label>
+                    Label
+                    <input type="text" name="label" placeholder="e.g. Savings Account" required>
+                </label>
+                <label>
+                    Currency
+                    <select name="currency">
+                        <option value="AUD">AUD</option>
+                        <option value="GBP">GBP</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </label>
+                <label>
+                    Amount
+                    <input type="number" name="amount" step="0.01" placeholder="0.00" required>
+                </label>
+                <label>
+                    Notes
+                    <input type="text" name="notes" placeholder="Optional">
+                </label>
+                <button type="submit" class="btn">Add</button>
+            </form>
+        </details>
+    </div>
 
     {% endif %}
 </div>
