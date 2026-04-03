@@ -54,6 +54,7 @@
             <th class="num">RSI</th>
             <th>52w Range</th>
             <th>Signals</th>
+            <th>Conditions</th>
             <th>Verdict</th>
             <th></th>
         </tr>
@@ -64,7 +65,7 @@
         {% if item.stock.sector != current_sector.value %}
         {% set current_sector.value = item.stock.sector %}
         <tr class="sector-header-row">
-            <td colspan="9">{{ item.stock.sector or 'Other' }}</td>
+            <td colspan="10">{{ item.stock.sector or 'Other' }}</td>
         </tr>
         {% endif %}
         {% set ind = item.indicators %}
@@ -72,8 +73,10 @@
         {% set bearish_count = item.signals|selectattr('signal_type', 'equalto', 'bearish')|list|length + item.signals|selectattr('signal_type', 'equalto', 'exit')|list|length %}
         <tr class="{% if bullish_count > bearish_count %}row-bullish{% elif bearish_count > bullish_count %}row-bearish{% endif %}">
             <td>
-                <span class="ticker">{{ item.stock.ticker|replace('.AX', '') }}</span>
-                <span class="company-name">{{ item.stock.name }}</span>
+                <a href="{{ url_for('stock_detail', ticker=item.stock.ticker|replace('.AX', '')) }}" class="ticker-link">
+                    <span class="ticker">{{ item.stock.ticker|replace('.AX', '') }}</span>
+                    <span class="company-name">{{ item.stock.name }}</span>
+                </a>
             </td>
             <td class="num">
                 {% if item.price %}${{ "%.2f"|format(item.price.adj_close) }}{% endif %}
@@ -114,6 +117,11 @@
                 {% for sig in item.signals[:3] %}
                 <span class="signal-pill {{ sig.signal_type }}">{{ sig.signal_name }}</span>
                 {% endfor %}
+            </td>
+            <td>
+                {% if item.conditions %}
+                <span class="conditions-badge" style="color: {{ item.conditions.color }}" title="{{ item.conditions.factors|map(attribute='label')|join(', ') }}">{{ item.conditions.label }}</span>
+                {% endif %}
             </td>
             <td>
                 {% if bullish_count > bearish_count %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}{{ ticker }} — ASX Stock Picker{% endblock %}
+
+{% block content %}
+
+<div class="stock-detail-page">
+
+    <a href="{{ url_for('dashboard') }}" class="ref-back">&larr; Back to Watchlist</a>
+
+    {# HEADER #}
+    <div class="stock-detail-header">
+        <div class="stock-detail-title">
+            <h1>{{ ticker }}</h1>
+            <span class="stock-detail-name">{{ info.get('longName', stock.name) }}</span>
+        </div>
+        <div class="stock-detail-meta">
+            {% if info.get('sector') %}<span class="stock-detail-sector">{{ info.sector }}</span>{% endif %}
+            {% if info.get('industry') %}<span class="stock-detail-industry">{{ info.industry }}</span>{% endif %}
+            {% if info.get('currentPrice') %}<span class="stock-detail-price">${{ "%.2f"|format(info.currentPrice) }}</span>{% endif %}
+        </div>
+    </div>
+
+    {# MACRO CONDITIONS HERO #}
+    {% if conditions %}
+    <div class="stock-conditions-hero" style="border-color: {{ conditions.color }}">
+        <div class="stock-conditions-left">
+            <span class="stock-conditions-label">Current market conditions for this stock</span>
+            <span class="stock-conditions-rating" style="color: {{ conditions.color }}">{{ conditions.label }}</span>
+            <span class="stock-conditions-score">Score: {{ conditions.score }}/3</span>
+        </div>
+        <div class="stock-conditions-factors">
+            {% for f in conditions.factors %}
+            <div class="condition-factor condition-{{ f.impact }}">
+                <span class="condition-factor-icon">{% if f.impact == 'tailwind' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                <span class="condition-factor-label">{{ f.label }}</span>
+                <span class="condition-factor-impact">{{ f.impact|title }}</span>
+            </div>
+            {% endfor %}
+            {% if not conditions.factors %}
+            <span style="color: var(--text-muted); font-size: 0.82rem;">No strong macro factors affecting this stock currently.</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# WHAT THEY DO #}
+    <h2>What {{ ticker }} Does</h2>
+    {% if info.get('longBusinessSummary') %}
+    <div class="stock-summary-box">
+        <p>{{ info.longBusinessSummary }}</p>
+    </div>
+    {% endif %}
+
+    {# PRODUCTS & SERVICES #}
+    {% if profile.products %}
+    <h2>Products & Services</h2>
+    <div class="stock-products">
+        {% for p in profile.products %}
+        <span class="stock-product-tag">{{ p }}</span>
+        {% endfor %}
+    </div>
+    <p class="section-intro" style="margin-top: 0.5rem">{{ profile.what_they_do }}</p>
+    {% endif %}
+
+    {# KEY BUSINESS DRIVERS #}
+    {% if profile.drivers %}
+    <h2>Key Business Drivers</h2>
+    <p class="section-intro">What makes or breaks this business. These are the factors you should monitor.</p>
+    <div class="stock-drivers">
+        {% for d in profile.drivers %}
+        <div class="stock-driver-item">
+            <span class="stock-driver-num">{{ loop.index }}</span>
+            <span class="stock-driver-text">{{ d }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# MACRO SENSITIVITIES #}
+    {% if profile.sensitivities %}
+    <h2>Macro Sensitivities</h2>
+    <p class="section-intro">How broader economic forces affect this stock. Understanding these helps you think about <em>when</em> to buy, not just <em>what</em> to buy.</p>
+
+    <table class="indicator-table">
+        <thead>
+            <tr>
+                <th>Factor</th>
+                <th>Direction</th>
+                <th>Weight</th>
+                <th>Why it matters</th>
+                <th>Current</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in profile.sensitivities %}
+            <tr>
+                <td><strong>{{ s.label }}</strong></td>
+                <td>
+                    {% if s.direction == 'positive' %}
+                    <span style="color: var(--green); font-weight: 600">&#9650; Rising = Good</span>
+                    {% elif s.direction == 'negative' %}
+                    <span style="color: var(--red); font-weight: 600">&#9660; Rising = Bad</span>
+                    {% else %}
+                    <span style="color: var(--yellow); font-weight: 600">&#9644; Mixed</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% for i in range(s.weight) %}<span style="color: var(--yellow)">&#9733;</span>{% endfor %}{% for i in range(3 - s.weight) %}<span style="color: var(--border)">&#9733;</span>{% endfor %}
+                </td>
+                <td style="font-size: 0.8rem; color: var(--text-muted)">{{ s.why }}</td>
+                <td>
+                    {% set current = conditions.factors|selectattr('label', 'equalto', s.label)|list %}
+                    {% if current %}
+                    <span class="condition-factor-mini condition-{{ current[0].impact }}">{{ current[0].impact|title }}</span>
+                    {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.75rem">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# KEY RISKS #}
+    {% if profile.risks %}
+    <h2>Key Risks</h2>
+    <div class="stock-risks">
+        {% for r in profile.risks %}
+        <span class="signal-tag signal-tag-risk">{{ r }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# SIGNAL CARD #}
+    {% if signal_card %}
+    <h2>Signal Card</h2>
+    <div class="signal-card signal-card-{{ signal_card.action }}" style="max-width: 100%">
+        <div class="signal-card-header">
+            <div class="signal-card-title">
+                <span class="signal-card-ticker">{{ signal_card.ticker }}</span>
+                <span class="signal-card-name">{{ signal_card.name }}</span>
+            </div>
+            <div class="signal-card-meta">
+                <span class="signal-card-price">${{ "%.2f"|format(signal_card.current_price) }}</span>
+                <span class="signal-card-rating rating-{{ signal_card.rating }}">{{ signal_card.rating|title }}</span>
+                <span class="signal-card-action action-{{ signal_card.action }}">
+                    {% if signal_card.action == 'buy_candidate' %}BUY CANDIDATE
+                    {% elif signal_card.action == 'watchlist' %}WATCHLIST
+                    {% else %}AVOID{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="signal-card-categories">
+            {% for cat in signal_card.categories %}
+            {% if cat.tags %}
+            <div class="signal-category">
+                <span class="signal-category-label">{{ cat.category }}</span>
+                <div class="signal-tags">
+                    {% for tag in cat.tags %}
+                    <span class="signal-tag signal-tag-{{ tag.type }}">{{ tag.label }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% if signal_card.risks %}
+        <div class="signal-risks">
+            <span class="signal-category-label">Risks</span>
+            <div class="signal-tags">
+                {% for risk in signal_card.risks %}
+                <span class="signal-tag signal-tag-risk">{{ risk }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="signal-card-summary">{{ signal_card.summary }}</div>
+    </div>
+    {% endif %}
+
+    {# THINKING FRAMEWORK #}
+    <h2>How to Think About {{ ticker }}</h2>
+    <div class="stock-framework">
+        <div class="framework-card">
+            <h4>Is this a good business?</h4>
+            <p>Look at the <strong>Quality</strong> signals — ROE, margins, balance sheet. A good business generates high returns on capital and has a moat (pricing power, switching costs, network effects).</p>
+        </div>
+        <div class="framework-card">
+            <h4>Is it improving or deteriorating?</h4>
+            <p>Look at the <strong>Growth</strong> signals — earnings revisions, revenue trends. Also check the macro sensitivities — are current conditions helping or hurting?</p>
+        </div>
+        <div class="framework-card">
+            <h4>Is it a good time to buy?</h4>
+            <p>Look at <strong>Valuation</strong> + <strong>Conditions</strong>. A great business at a bad price is still a bad investment. Wait for the right entry — ideally when the macro environment is turning in the stock's favour.</p>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

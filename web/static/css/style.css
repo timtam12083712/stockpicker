@@ -184,6 +184,114 @@ h2 { margin: 1.5rem 0 0.75rem; color: var(--text-muted); font-size: 1rem; }
     background: var(--bg);
 }
 
+/* Ticker link */
+.ticker-link { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 0.1rem; }
+.ticker-link:hover .ticker { color: var(--accent); }
+.ticker-link:hover .company-name { color: var(--accent); }
+
+/* Conditions badge */
+.conditions-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ===== Stock Detail Page ===== */
+.stock-detail-page { max-width: 1100px; margin: 0 auto; }
+.stock-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.stock-detail-title h1 { font-size: 1.8rem; margin: 0; }
+.stock-detail-name { font-size: 0.95rem; color: var(--text-muted); display: block; margin-top: 0.1rem; }
+.stock-detail-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.stock-detail-sector {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.3px; color: var(--accent);
+    background: rgba(79, 143, 247, 0.1); padding: 0.15rem 0.5rem; border-radius: 4px;
+}
+.stock-detail-industry { font-size: 0.78rem; color: var(--text-muted); }
+.stock-detail-price { font-size: 1.2rem; font-weight: 800; }
+
+/* Conditions hero */
+.stock-conditions-hero {
+    background: var(--surface);
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+}
+.stock-conditions-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: block; }
+.stock-conditions-rating { font-size: 1.4rem; font-weight: 800; display: block; margin: 0.1rem 0; }
+.stock-conditions-score { font-size: 0.78rem; color: var(--text-muted); }
+.stock-conditions-factors { display: flex; flex-wrap: wrap; gap: 0.4rem; align-content: flex-start; }
+.condition-factor {
+    display: flex; align-items: center; gap: 0.3rem;
+    padding: 0.25rem 0.6rem; border-radius: 4px;
+    font-size: 0.78rem; font-weight: 600;
+}
+.condition-tailwind { background: rgba(52, 211, 153, 0.1); color: var(--green); }
+.condition-headwind { background: rgba(248, 113, 113, 0.1); color: var(--red); }
+.condition-factor-icon { font-size: 0.6rem; }
+.condition-factor-label { font-weight: 700; }
+.condition-factor-impact { font-size: 0.68rem; color: var(--text-muted); }
+.condition-factor-mini { font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 3px; }
+.condition-factor-mini.condition-tailwind { background: rgba(52, 211, 153, 0.12); color: var(--green); }
+.condition-factor-mini.condition-headwind { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+
+/* Business summary */
+.stock-summary-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+}
+.stock-summary-box p { font-size: 0.85rem; line-height: 1.7; color: var(--text); }
+
+/* Products */
+.stock-products { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.stock-product-tag {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+    padding: 0.3rem 0.7rem; font-size: 0.8rem; font-weight: 600;
+}
+
+/* Drivers */
+.stock-drivers { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1.5rem; }
+.stock-driver-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.35rem 0; font-size: 0.83rem;
+}
+.stock-driver-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; color: var(--text-muted);
+    flex-shrink: 0;
+}
+.stock-driver-text { color: var(--text); line-height: 1.5; }
+
+/* Risks */
+.stock-risks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; }
+
+/* Framework cards */
+.stock-framework { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 2rem; }
+.framework-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.25rem;
+}
+.framework-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.3rem; }
+.framework-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
+
+@media (max-width: 768px) {
+    .stock-conditions-hero { grid-template-columns: 1fr; }
+    .stock-framework { grid-template-columns: 1fr; }
+}
+
 /* Row tinting for bullish/bearish */
 tr.row-bullish { background: var(--green-bg); }
 tr.row-bearish { background: var(--red-bg); }

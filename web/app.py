@@ -382,6 +382,12 @@ def dashboard():
     macro = get_macro_data()
     cycle = get_economic_cycle()
 
+    # Score macro conditions for each stock's sector
+    from signals.macro_sensitivity import score_macro_conditions
+    for item in stock_data:
+        sector = item["stock"].get("sector", "")
+        item["conditions"] = score_macro_conditions(sector, macro, cycle)
+
     return render_template(
         "dashboard.html",
         stock_data=stock_data,
@@ -389,6 +395,58 @@ def dashboard():
         recent_splits=recent_splits,
         macro=macro,
         cycle=cycle,
+    )
+
+
+@app.route("/stock/<ticker>")
+def stock_detail(ticker):
+    """Stock detail page — products, drivers, macro sensitivities."""
+    if not ticker.endswith(".AX"):
+        ticker_full = ticker + ".AX"
+    else:
+        ticker_full = ticker
+        ticker = ticker.replace(".AX", "")
+
+    conn = get_connection()
+    stock = conn.execute("SELECT * FROM stocks WHERE ticker=?", (ticker_full,)).fetchone()
+    conn.close()
+    if not stock:
+        flash(f"Stock {ticker} not found.")
+        return redirect(url_for("dashboard"))
+
+    stock = dict(stock)
+
+    # Get yfinance info for business summary
+    try:
+        t = yf.Ticker(ticker_full)
+        info = t.info or {}
+    except Exception:
+        info = {}
+
+    # Get sector profile
+    from signals.macro_sensitivity import get_sector_profile, score_macro_conditions
+    sector = info.get("sector", stock.get("sector", ""))
+    profile = get_sector_profile(sector)
+
+    # Score current conditions
+    macro = get_macro_data()
+    cycle = get_economic_cycle()
+    conditions = score_macro_conditions(sector, macro, cycle)
+
+    # Get fundamental signal card
+    from signals.fundamentals import generate_signal_card
+    signal_card = generate_signal_card(ticker_full)
+
+    return render_template(
+        "stock_detail.html",
+        stock=stock,
+        ticker=ticker,
+        ticker_full=ticker_full,
+        info=info,
+        profile=profile,
+        conditions=conditions,
+        cycle=cycle,
+        signal_card=signal_card,
     )
 
 
