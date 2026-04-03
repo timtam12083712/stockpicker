@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Add User — ASX Stock Picker{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <h1>Add User</h1>
+        <p class="auth-subtitle">Create a login for someone else. They'll see the same portfolio data as you.</p>
+
+        <form method="POST" class="auth-form">
+            <label>
+                Username
+                <input type="text" name="username" required autofocus>
+            </label>
+            <label>
+                Password <span class="auth-hint">min 12 characters</span>
+                <input type="password" name="password" required minlength="12">
+            </label>
+            <button type="submit" class="btn auth-btn">Create Account</button>
+        </form>
+
+        <p class="auth-note">After creating the account, you'll get a QR code for their 2FA setup. Have them scan it with Google Authenticator or Authy on their phone.</p>
+    </div>
+</div>
+{% endblock %}

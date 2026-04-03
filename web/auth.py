@@ -394,6 +394,48 @@ def login_verify_2fa():
     return render_template("auth/totp.html")
 
 
+@auth_bp.route("/add-user", methods=["GET", "POST"])
+@login_required
+def add_user():
+    """Create an additional user account (logged-in users only)."""
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        password = request.form["password"]
+
+        if len(password) < 12:
+            flash("Password must be at least 12 characters.")
+            return render_template("auth/add_user.html")
+
+        # Check username not taken
+        if get_user_by_username(username):
+            flash("Username already taken.")
+            return render_template("auth/add_user.html")
+
+        user_id = create_user(username, password)
+
+        # Generate TOTP
+        totp_secret = generate_totp_secret()
+        backup_codes = generate_backup_codes()
+        conn = get_connection()
+        conn.execute(
+            "UPDATE app_users SET totp_secret=?, backup_codes=? WHERE id=?",
+            (totp_secret, json.dumps(backup_codes), user_id),
+        )
+        conn.commit()
+        conn.close()
+
+        qr_b64 = get_totp_qr_code(username, totp_secret)
+        return render_template(
+            "auth/setup_2fa.html",
+            qr_code=qr_b64,
+            secret=totp_secret,
+            backup_codes=backup_codes,
+            username=username,
+        )
+
+    return render_template("auth/add_user.html")
+
+
 @auth_bp.route("/logout")
 def logout():
     logout_user()
