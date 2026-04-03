@@ -17,6 +17,7 @@
             {% if info.get('sector') %}<span class="stock-detail-sector">{{ info.sector }}</span>{% endif %}
             {% if info.get('industry') %}<span class="stock-detail-industry">{{ info.industry }}</span>{% endif %}
             {% if info.get('currentPrice') %}<span class="stock-detail-price">${{ "%.2f"|format(info.currentPrice) }}</span>{% endif %}
+            {% if info.get('website') %}<a href="{{ info.website }}" target="_blank" class="stock-detail-website">{{ info.website|replace('https://', '')|replace('http://', '') }}</a>{% endif %}
         </div>
     </div>
 
@@ -28,39 +29,51 @@
             <span class="stock-conditions-rating" style="color: {{ conditions.color }}">{{ conditions.label }}</span>
             <span class="stock-conditions-score">Score: {{ conditions.score }}/3</span>
         </div>
-        <div class="stock-conditions-factors">
-            {% for f in conditions.factors %}
-            <div class="condition-factor condition-{{ f.impact }}">
-                <span class="condition-factor-icon">{% if f.impact == 'tailwind' %}&#9650;{% else %}&#9660;{% endif %}</span>
-                <span class="condition-factor-label">{{ f.label }}</span>
-                <span class="condition-factor-impact">{{ f.impact|title }}</span>
+        <div class="stock-conditions-right">
+            <div class="conditions-explainer">
+                <span class="conditions-explainer-title">What does this mean?</span>
+                <p>A <strong>tailwind</strong> is a macro force that is currently <em>helping</em> this stock — like a wind at your back pushing you forward. A <strong>headwind</strong> is a force working <em>against</em> it — making it harder for the business to grow or for the share price to rise.</p>
             </div>
-            {% endfor %}
-            {% if not conditions.factors %}
-            <span style="color: var(--text-muted); font-size: 0.82rem;">No strong macro factors affecting this stock currently.</span>
-            {% endif %}
         </div>
     </div>
+
+    {% if conditions.factors %}
+    <div class="conditions-factors-detail">
+        {% for f in conditions.factors %}
+        <div class="condition-detail-row condition-{{ f.impact }}">
+            <div class="condition-detail-header">
+                <span class="condition-detail-icon">{% if f.impact == 'tailwind' %}&#9650;{% else %}&#9660;{% endif %}</span>
+                <span class="condition-detail-label">{{ f.label }}</span>
+                <span class="condition-detail-badge condition-{{ f.impact }}">{{ f.impact|title }}</span>
+            </div>
+            <p class="condition-detail-why">{{ f.why }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="section-intro">No strong macro factors affecting this stock currently — conditions are broadly neutral.</p>
+    {% endif %}
     {% endif %}
 
     {# WHAT THEY DO #}
     <h2>What {{ ticker }} Does</h2>
-    {% if info.get('longBusinessSummary') %}
-    <div class="stock-summary-box">
-        <p>{{ info.longBusinessSummary }}</p>
+    <div class="stock-snapshot">
+        <ul class="stock-snapshot-list">
+            <li><strong>Sector:</strong> {{ info.get('sector', stock.sector) }} — {{ info.get('industry', '') }}</li>
+            {% if profile.what_they_do %}<li>{{ profile.what_they_do }}</li>{% endif %}
+            {% if profile.products %}
+            <li><strong>Key products/services:</strong> {{ profile.products|join(', ') }}</li>
+            {% endif %}
+            {% if info.get('fullTimeEmployees') %}<li><strong>Employees:</strong> {{ "{:,}".format(info.fullTimeEmployees) }}</li>{% endif %}
+            {% if info.get('country') %}<li><strong>HQ:</strong> {{ info.get('city', '') }}{{ ', ' if info.get('city') }}{{ info.country }}</li>{% endif %}
+        </ul>
+        {% if info.get('longBusinessSummary') %}
+        <details class="stock-full-desc">
+            <summary>Full description</summary>
+            <p>{{ info.longBusinessSummary }}</p>
+        </details>
+        {% endif %}
     </div>
-    {% endif %}
-
-    {# PRODUCTS & SERVICES #}
-    {% if profile.products %}
-    <h2>Products & Services</h2>
-    <div class="stock-products">
-        {% for p in profile.products %}
-        <span class="stock-product-tag">{{ p }}</span>
-        {% endfor %}
-    </div>
-    <p class="section-intro" style="margin-top: 0.5rem">{{ profile.what_they_do }}</p>
-    {% endif %}
 
     {# KEY BUSINESS DRIVERS #}
     {% if profile.drivers %}
