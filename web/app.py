@@ -393,15 +393,23 @@ def dashboard():
 
 @app.route("/signals")
 def signals():
-    """Signal history page."""
+    """Fundamental signals page — signal cards for each watchlist stock."""
     conn = get_connection()
-    rows = conn.execute(
-        """SELECT s.*, st.name as stock_name
-           FROM signals s JOIN stocks st ON st.ticker = s.ticker
-           ORDER BY s.created_at DESC LIMIT 100"""
+    stocks = conn.execute(
+        "SELECT ticker FROM stocks WHERE active=1 ORDER BY sector, ticker"
     ).fetchall()
     conn.close()
-    return render_template("signals.html", signals=[dict(r) for r in rows])
+
+    tickers = [s["ticker"] for s in stocks]
+
+    from signals.fundamentals import generate_all_signal_cards
+    cards = generate_all_signal_cards(tickers)
+
+    # Sort: buy candidates first, then watchlist, then avoid
+    action_order = {"buy_candidate": 0, "watchlist": 1, "avoid": 2}
+    cards.sort(key=lambda c: action_order.get(c["action"], 1))
+
+    return render_template("signals.html", cards=cards)
 
 
 @app.route("/journal")

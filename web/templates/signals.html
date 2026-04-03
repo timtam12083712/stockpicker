@@ -2,30 +2,135 @@
 {% block title %}Signals — ASX Stock Picker{% endblock %}
 
 {% block content %}
-<h1>Signals</h1>
 
-{% if not signals %}
-<p class="empty-state">No signals yet. Run the nightly fetch to generate signals.</p>
-{% else %}
+<div class="signals-page">
+    <h1>Signals</h1>
+    <p class="signals-subtitle">Fundamental signal cards for your watchlist. Updated from live market data.</p>
 
-<div class="signal-list">
-    {% for sig in signals %}
-    <div class="signal-row {{ sig.signal_type }}">
-        <div class="signal-header">
-            <span class="signal-ticker">{{ sig.ticker|replace('.AX', '') }}</span>
-            <span class="signal-stock-name">{{ sig.stock_name }}</span>
-            <span class="signal-pill {{ sig.signal_type }}">{{ sig.signal_name }}</span>
-            <span class="signal-date">{{ sig.date }}</span>
+    {% if not cards %}
+    <p class="empty-state">No signal data yet. Add stocks to your watchlist and check back.</p>
+    {% else %}
+
+    {# Action summary bar #}
+    <div class="signals-summary-bar">
+        {% set buy_count = cards|selectattr('action', 'equalto', 'buy_candidate')|list|length %}
+        {% set watch_count = cards|selectattr('action', 'equalto', 'watchlist')|list|length %}
+        {% set avoid_count = cards|selectattr('action', 'equalto', 'avoid')|list|length %}
+        <div class="signals-summary-item buy">
+            <span class="signals-summary-count">{{ buy_count }}</span>
+            <span class="signals-summary-label">Buy Candidate{{ 's' if buy_count != 1 }}</span>
         </div>
-        {% if sig.ai_summary %}
-        <details class="signal-detail">
-            <summary>AI Analysis</summary>
-            <div class="signal-summary">{{ sig.ai_summary }}</div>
-        </details>
-        {% endif %}
+        <div class="signals-summary-item watch">
+            <span class="signals-summary-count">{{ watch_count }}</span>
+            <span class="signals-summary-label">Watchlist</span>
+        </div>
+        <div class="signals-summary-item avoid">
+            <span class="signals-summary-count">{{ avoid_count }}</span>
+            <span class="signals-summary-label">Avoid</span>
+        </div>
     </div>
-    {% endfor %}
+
+    {# Signal cards #}
+    <div class="signal-cards">
+        {% for card in cards %}
+        <div class="signal-card signal-card-{{ card.action }}">
+
+            {# HEADER #}
+            <div class="signal-card-header">
+                <div class="signal-card-title">
+                    <span class="signal-card-ticker">{{ card.ticker }}</span>
+                    <span class="signal-card-name">{{ card.name }}</span>
+                    {% if card.sector %}
+                    <span class="signal-card-sector">{{ card.sector }}</span>
+                    {% endif %}
+                </div>
+                <div class="signal-card-meta">
+                    <span class="signal-card-price">${{ "%.2f"|format(card.current_price) }}</span>
+                    <span class="signal-card-rating rating-{{ card.rating }}">{{ card.rating|title }}</span>
+                    <span class="signal-card-action action-{{ card.action }}">
+                        {% if card.action == 'buy_candidate' %}BUY CANDIDATE
+                        {% elif card.action == 'watchlist' %}WATCHLIST
+                        {% else %}AVOID{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {# SIGNAL CATEGORIES #}
+            <div class="signal-card-categories">
+                {% for cat in card.categories %}
+                {% if cat.tags %}
+                <div class="signal-category">
+                    <span class="signal-category-label">{{ cat.category }}</span>
+                    <div class="signal-tags">
+                        {% for tag in cat.tags %}
+                        <span class="signal-tag signal-tag-{{ tag.type }}">{{ tag.label }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            {# RISK FLAGS #}
+            {% if card.risks %}
+            <div class="signal-risks">
+                <span class="signal-category-label">Risks</span>
+                <div class="signal-tags">
+                    {% for risk in card.risks %}
+                    <span class="signal-tag signal-tag-risk">{{ risk }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# SUMMARY #}
+            <div class="signal-card-summary">
+                {{ card.summary }}
+            </div>
+
+            {# DETAIL TOGGLE #}
+            <details class="signal-card-details">
+                <summary>Details</summary>
+                <div class="signal-detail-grid">
+                    {% set f = card.fundamentals %}
+                    <div class="signal-detail-col">
+                        <h5>Quality</h5>
+                        {% if f.roe is not none %}<div class="detail-row"><span>ROE</span><span>{{ "%.1f"|format(f.roe * 100) }}%</span></div>{% endif %}
+                        {% if f.profit_margin is not none %}<div class="detail-row"><span>Profit Margin</span><span>{{ "%.1f"|format(f.profit_margin * 100) }}%</span></div>{% endif %}
+                        {% if f.operating_margin is not none %}<div class="detail-row"><span>Operating Margin</span><span>{{ "%.1f"|format(f.operating_margin * 100) }}%</span></div>{% endif %}
+                        {% if f.debt_to_equity is not none %}<div class="detail-row"><span>Debt/Equity</span><span>{{ "%.0f"|format(f.debt_to_equity) }}%</span></div>{% endif %}
+                        {% if f.current_ratio is not none %}<div class="detail-row"><span>Current Ratio</span><span>{{ "%.1f"|format(f.current_ratio) }}x</span></div>{% endif %}
+                    </div>
+                    <div class="signal-detail-col">
+                        <h5>Growth</h5>
+                        {% if f.revenue_growth is not none %}<div class="detail-row"><span>Revenue Growth</span><span>{{ "%.1f"|format(f.revenue_growth * 100) }}%</span></div>{% endif %}
+                        {% if f.earnings_growth is not none %}<div class="detail-row"><span>Earnings Growth</span><span>{{ "%.1f"|format(f.earnings_growth * 100) }}%</span></div>{% endif %}
+                        {% if f.earnings_quarterly_growth is not none %}<div class="detail-row"><span>Quarterly EPS</span><span>{{ "%.1f"|format(f.earnings_quarterly_growth * 100) }}%</span></div>{% endif %}
+                    </div>
+                    <div class="signal-detail-col">
+                        <h5>Valuation</h5>
+                        {% if f.pe_trailing is not none %}<div class="detail-row"><span>PE (TTM)</span><span>{{ "%.1f"|format(f.pe_trailing) }}x</span></div>{% endif %}
+                        {% if f.pe_forward is not none %}<div class="detail-row"><span>PE (Fwd)</span><span>{{ "%.1f"|format(f.pe_forward) }}x</span></div>{% endif %}
+                        {% if f.dividend_yield is not none %}<div class="detail-row"><span>Div Yield</span><span>{{ "%.2f"|format(f.dividend_yield * 100) }}%</span></div>{% endif %}
+                        {% if f.fcf_yield is not none %}<div class="detail-row"><span>FCF Yield</span><span>{{ "%.1f"|format(f.fcf_yield * 100) }}%</span></div>{% endif %}
+                        {% if f.price_to_book is not none %}<div class="detail-row"><span>P/Book</span><span>{{ "%.1f"|format(f.price_to_book) }}x</span></div>{% endif %}
+                        {% if f.analyst_target is not none %}<div class="detail-row"><span>Target ({{ f.number_of_analysts }} analysts)</span><span>${{ "%.2f"|format(f.analyst_target) }}</span></div>{% endif %}
+                    </div>
+                    <div class="signal-detail-col">
+                        <h5>Momentum</h5>
+                        {% if f.return_3m is not none %}<div class="detail-row"><span>3M Return</span><span class="{% if f.return_3m >= 0 %}positive{% else %}negative{% endif %}">{{ "%+.1f"|format(f.return_3m * 100) }}%</span></div>{% endif %}
+                        {% if f.return_6m is not none %}<div class="detail-row"><span>6M Return</span><span class="{% if f.return_6m >= 0 %}positive{% else %}negative{% endif %}">{{ "%+.1f"|format(f.return_6m * 100) }}%</span></div>{% endif %}
+                        {% if f.relative_strength_3m is not none %}<div class="detail-row"><span>vs ASX200 (3M)</span><span class="{% if f.relative_strength_3m >= 0 %}positive{% else %}negative{% endif %}">{{ "%+.1f"|format(f.relative_strength_3m * 100) }}%</span></div>{% endif %}
+                        {% if f.two_hundred_day_avg is not none %}<div class="detail-row"><span>200 DMA</span><span>${{ "%.2f"|format(f.two_hundred_day_avg) }}</span></div>{% endif %}
+                    </div>
+                </div>
+            </details>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {% endif %}
 </div>
 
-{% endif %}
 {% endblock %}

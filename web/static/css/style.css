@@ -297,8 +297,184 @@ tr.row-bearish:hover { background: rgba(248, 113, 113, 0.12); }
 .add-stock-form input { padding: 0.4rem 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 0.85rem; }
 
 /* ===== Signals Page ===== */
-.signal-list { display: flex; flex-direction: column; gap: 2px; }
+.signals-page { max-width: 1200px; margin: 0 auto; }
+.signals-subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; }
 
+/* Summary bar */
+.signals-summary-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+.signals-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    min-width: 140px;
+}
+.signals-summary-count { font-size: 1.3rem; font-weight: 800; }
+.signals-summary-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.signals-summary-item.buy .signals-summary-count { color: var(--green); }
+.signals-summary-item.watch .signals-summary-count { color: var(--yellow); }
+.signals-summary-item.avoid .signals-summary-count { color: var(--red); }
+
+/* Signal cards grid */
+.signal-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.signal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    border-left: 4px solid var(--border);
+}
+.signal-card-buy_candidate { border-left-color: var(--green); }
+.signal-card-watchlist { border-left-color: var(--yellow); }
+.signal-card-avoid { border-left-color: var(--red); }
+
+/* Card header */
+.signal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+.signal-card-title { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.signal-card-ticker { font-size: 1.1rem; font-weight: 800; }
+.signal-card-name { font-size: 0.85rem; color: var(--text-muted); }
+.signal-card-sector { font-size: 0.7rem; color: var(--text-muted); background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 3px; }
+.signal-card-meta { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+.signal-card-price { font-size: 0.95rem; font-weight: 700; }
+
+/* Rating badge */
+.signal-card-rating {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.rating-bullish { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+.rating-neutral { background: rgba(251, 191, 36, 0.12); color: var(--yellow); }
+.rating-bearish { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+
+/* Action badge */
+.signal-card-action {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+.action-buy_candidate { background: var(--green); color: var(--bg); }
+.action-watchlist { background: var(--yellow); color: var(--bg); }
+.action-avoid { background: var(--red); color: white; }
+
+/* Signal categories */
+.signal-card-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+}
+.signal-category {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+.signal-category-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    min-width: 70px;
+    padding-top: 0.2rem;
+    flex-shrink: 0;
+}
+.signal-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.signal-tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.signal-tag-bullish { background: rgba(52, 211, 153, 0.12); color: var(--green); }
+.signal-tag-neutral { background: rgba(251, 191, 36, 0.08); color: var(--yellow); }
+.signal-tag-bearish { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+.signal-tag-risk {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+}
+.signal-tag-risk::before { content: "\26A0\FE0F "; }
+
+/* Risk row */
+.signal-risks {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+/* Summary */
+.signal-card-summary {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+}
+
+/* Detail expansion */
+.signal-card-details { margin-top: 0.25rem; }
+.signal-card-details summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+    user-select: none;
+}
+.signal-card-details summary:hover { text-decoration: underline; }
+.signal-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border-radius: 6px;
+}
+.signal-detail-col h5 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    padding: 0.15rem 0;
+    gap: 0.5rem;
+}
+.detail-row span:first-child { color: var(--text-muted); }
+.detail-row span:last-child { font-weight: 600; text-align: right; }
+
+/* Legacy signal rows (kept for journal/history) */
+.signal-list { display: flex; flex-direction: column; gap: 2px; }
 .signal-row {
     background: var(--surface);
     border-left: 3px solid var(--border);
@@ -308,48 +484,26 @@ tr.row-bearish:hover { background: rgba(248, 113, 113, 0.12); }
 .signal-row.bullish, .signal-row.entry { border-left-color: var(--green); }
 .signal-row.bearish, .signal-row.exit { border-left-color: var(--red); }
 .signal-row.attention { border-left-color: var(--yellow); }
-
 .signal-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
-.signal-ticker {
-    font-weight: 700;
-    font-size: 0.95rem;
-    min-width: 40px;
-}
-.signal-stock-name {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    min-width: 120px;
-}
-.signal-date {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    margin-left: auto;
-}
-
-.signal-detail {
-    margin-top: 0.4rem;
-}
-.signal-detail summary {
-    cursor: pointer;
-    color: var(--accent);
-    font-size: 0.8rem;
-    user-select: none;
-}
+.signal-ticker { font-weight: 700; font-size: 0.95rem; min-width: 40px; }
+.signal-stock-name { color: var(--text-muted); font-size: 0.8rem; min-width: 120px; }
+.signal-date { color: var(--text-muted); font-size: 0.75rem; margin-left: auto; }
+.signal-detail { margin-top: 0.4rem; }
+.signal-detail summary { cursor: pointer; color: var(--accent); font-size: 0.8rem; user-select: none; }
 .signal-detail summary:hover { text-decoration: underline; }
 .signal-summary {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    background: var(--bg);
-    border-radius: 4px;
-    font-size: 0.8rem;
-    line-height: 1.6;
-    color: var(--text-muted);
-    white-space: pre-wrap;
+    margin-top: 0.5rem; padding: 0.75rem; background: var(--bg); border-radius: 4px;
+    font-size: 0.8rem; line-height: 1.6; color: var(--text-muted); white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+    .signal-detail-grid { grid-template-columns: repeat(2, 1fr); }
+    .signals-summary-bar { flex-wrap: wrap; }
 }
 
 /* ===== Legacy signal badges (journal etc) ===== */
