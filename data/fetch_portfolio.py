@@ -312,6 +312,11 @@ def sync_all_portfolios():
             success = sync_snaptrade_account(acc["id"])
             if success:
                 save_broker_snapshot(acc["id"])
+        elif acc["connection_type"] == "api" and acc["broker_name"] == "swyftx":
+            from data.fetch_swyftx import sync_swyftx
+            success = sync_swyftx(acc["id"])
+            if success:
+                save_broker_snapshot(acc["id"])
         elif acc["connection_type"] == "api":
             print(f"  API sync not yet implemented for {acc['broker_name']}")
         elif acc["connection_type"] == "csv":
