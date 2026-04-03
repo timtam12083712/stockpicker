@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — ASX Stock Picker</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main>
+        <div class="auth-page">
+            <div class="auth-card">
+                <h1>ASX Stock Picker</h1>
+                <p class="auth-subtitle">Log in to your dashboard</p>
+
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="flash">{{ msg }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" class="auth-form">
+                    <label>
+                        Username
+                        <input type="text" name="username" required autofocus>
+                    </label>
+                    <label>
+                        Password
+                        <input type="password" name="password" required>
+                    </label>
+                    <button type="submit" class="btn auth-btn">Log In</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

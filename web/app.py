@@ -14,6 +14,7 @@ from markupsafe import Markup
 
 import yfinance as yf
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from config import Config
 from db.init_db import get_connection, init_db
 from journal.trades import open_trade, close_trade, get_open_trades, get_trade_history, get_trade_stats
@@ -21,6 +22,24 @@ from data.corporate_actions import get_upcoming_dividends, get_recent_splits
 
 app = Flask(__name__)
 app.secret_key = Config.FLASK_SECRET_KEY
+
+# Auth setup
+from web.auth import auth_bp, login_manager, check_session_timeout
+login_manager.init_app(app)
+app.register_blueprint(auth_bp)
+
+
+@app.before_request
+def before_request():
+    # Skip auth check for auth routes and static files
+    if request.endpoint and (
+        request.endpoint.startswith("auth.") or
+        request.endpoint == "static"
+    ):
+        return
+    result = check_session_timeout()
+    if result:
+        return result
 
 # Macro ticker cache (refreshes every 10 minutes)
 _macro_cache = {"data": [], "ts": 0}
@@ -303,6 +322,7 @@ def make_sparkline(prices, width=120, height=32):
 
 
 @app.route("/")
+@login_required
 def dashboard():
     """Main dashboard — watchlist overview."""
     conn = get_connection()
@@ -399,6 +419,7 @@ def dashboard():
 
 
 @app.route("/stock/<ticker>")
+@login_required
 def stock_detail(ticker):
     """Stock detail page — products, drivers, macro sensitivities."""
     if not ticker.endswith(".AX"):
@@ -451,6 +472,7 @@ def stock_detail(ticker):
 
 
 @app.route("/signals")
+@login_required
 def signals():
     """Fundamental signals page — signal cards for each watchlist stock."""
     conn = get_connection()
@@ -472,6 +494,7 @@ def signals():
 
 
 @app.route("/journal")
+@login_required
 def journal():
     """Trade journal page."""
     open_trades = get_open_trades()
@@ -486,6 +509,7 @@ def journal():
 
 
 @app.route("/journal/new", methods=["GET", "POST"])
+@login_required
 def journal_new():
     """New trade entry form."""
     if request.method == "POST":
@@ -509,6 +533,7 @@ def journal_new():
 
 
 @app.route("/journal/close/<int:trade_id>", methods=["GET", "POST"])
+@login_required
 def journal_close(trade_id):
     """Close an open trade."""
     if request.method == "POST":
@@ -530,6 +555,7 @@ def journal_close(trade_id):
 
 
 @app.route("/portfolio")
+@login_required
 def portfolio():
     """Unified multi-broker portfolio view."""
     conn = get_connection()
@@ -658,6 +684,7 @@ def portfolio():
 
 
 @app.route("/portfolio/sync")
+@login_required
 def portfolio_sync():
     """Trigger a manual sync of all connected broker accounts."""
     from data.fetch_portfolio import sync_all_portfolios
@@ -667,6 +694,7 @@ def portfolio_sync():
 
 
 @app.route("/portfolio/add-broker", methods=["POST"])
+@login_required
 def portfolio_add_broker():
     """Add a new broker account."""
     broker_name = request.form["broker_name"]
@@ -687,6 +715,7 @@ def portfolio_add_broker():
 
 
 @app.route("/portfolio/cash/add", methods=["POST"])
+@login_required
 def portfolio_cash_add():
     """Add a cash holding."""
     conn = get_connection()
@@ -702,6 +731,7 @@ def portfolio_cash_add():
 
 
 @app.route("/portfolio/cash/delete/<int:cash_id>", methods=["POST"])
+@login_required
 def portfolio_cash_delete(cash_id):
     """Delete a cash holding."""
     conn = get_connection()
@@ -713,6 +743,7 @@ def portfolio_cash_delete(cash_id):
 
 
 @app.route("/portfolio/cash/edit/<int:cash_id>", methods=["POST"])
+@login_required
 def portfolio_cash_edit(cash_id):
     """Update a cash holding."""
     conn = get_connection()
@@ -728,6 +759,7 @@ def portfolio_cash_edit(cash_id):
 
 
 @app.route("/ref")
+@login_required
 def reference():
     """Reference hub — learning sections."""
     cycle = get_economic_cycle()
@@ -735,12 +767,14 @@ def reference():
 
 
 @app.route("/ref/indicators")
+@login_required
 def ref_indicators():
     """Technical indicators and signals learning page."""
     return render_template("indicators.html")
 
 
 @app.route("/ref/cycle")
+@login_required
 def ref_cycle():
     """Economic cycle learning page — dynamic, shows current phase."""
     cycle = get_economic_cycle()
@@ -750,6 +784,7 @@ def ref_cycle():
 
 
 @app.route("/watchlist/add", methods=["POST"])
+@login_required
 def watchlist_add():
     """Add a stock to the watchlist."""
     ticker = request.form["ticker"].upper().strip()
@@ -774,6 +809,7 @@ def watchlist_add():
 
 
 @app.route("/watchlist/remove/<ticker>", methods=["POST"])
+@login_required
 def watchlist_remove(ticker):
     """Soft-delete a stock from the watchlist."""
     conn = get_connection()

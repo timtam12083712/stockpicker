@@ -172,6 +172,19 @@ CREATE TABLE IF NOT EXISTS etoro_imports (
     status          TEXT DEFAULT 'success' CHECK (status IN ('success', 'partial', 'error'))
 );
 
+CREATE TABLE IF NOT EXISTS app_users (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    username        TEXT NOT NULL UNIQUE,
+    password_hash   TEXT NOT NULL,
+    totp_secret     TEXT,                   -- TOTP secret for 2FA (encrypted)
+    totp_enabled    BOOLEAN NOT NULL DEFAULT 0,
+    backup_codes    TEXT,                   -- JSON array of single-use backup codes
+    failed_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until    DATETIME,
+    last_login      DATETIME,
+    created_at      DATETIME NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS cash_holdings (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     label           TEXT NOT NULL,          -- e.g. 'Emergency Fund', 'ISA Cash', 'Offset Account'

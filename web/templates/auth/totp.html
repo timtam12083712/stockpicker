@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA — ASX Stock Picker</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main>
+        <div class="auth-page">
+            <div class="auth-card">
+                <h1>Two-Factor Authentication</h1>
+                <p class="auth-subtitle">Enter the 6-digit code from your authenticator app, or a backup code.</p>
+
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="flash">{{ msg }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="/login/verify-2fa" class="auth-form">
+                    <label>
+                        Code
+                        <input type="text" name="totp_code" required maxlength="8" autofocus autocomplete="off" inputmode="numeric" placeholder="000000 or backup code">
+                    </label>
+                    <button type="submit" class="btn auth-btn">Verify</button>
+                </form>
+
+                <a href="/login" class="auth-back-link">Back to login</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

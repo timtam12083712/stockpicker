@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup 2FA — ASX Stock Picker</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main>
+        <div class="auth-page">
+            <div class="auth-card auth-card-wide">
+                <h1>Set Up Two-Factor Authentication</h1>
+                <p class="auth-subtitle">Scan this QR code with Google Authenticator or Authy, then enter the 6-digit code to verify.</p>
+
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="flash">{{ msg }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <div class="totp-setup">
+                    <div class="totp-qr">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="TOTP QR Code">
+                    </div>
+                    <div class="totp-manual">
+                        <p class="auth-hint">Can't scan? Enter this key manually:</p>
+                        <code class="totp-secret">{{ secret }}</code>
+                    </div>
+                </div>
+
+                <form method="POST" action="/setup/verify-2fa" class="auth-form">
+                    <input type="hidden" name="username" value="{{ username }}">
+                    <label>
+                        Enter the 6-digit code from your authenticator app
+                        <input type="text" name="totp_code" required pattern="[0-9]{6}" maxlength="6" autofocus autocomplete="off" inputmode="numeric" placeholder="000000">
+                    </label>
+                    <button type="submit" class="btn auth-btn">Verify & Complete Setup</button>
+                </form>
+
+                <div class="backup-codes">
+                    <h3>Backup Codes</h3>
+                    <p class="auth-note">Save these codes in your password manager (1Password, Bitwarden). Each code can only be used once. These are your only way in if you lose your authenticator.</p>
+                    <div class="backup-code-grid">
+                        {% for code in backup_codes %}
+                        <span class="backup-code">{{ code }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
